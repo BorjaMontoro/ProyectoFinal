@@ -39,7 +39,7 @@ function shutDown() {
 //   port: process.env.MYSQLPORT || 3306,
 //   user: process.env.MYSQLUSER || "root",
 //   password: process.env.MYSQLPASSWORD || "",
-//   database: process.env.MYSQLDATABASE || "corndb"
+//   database: process.env.MYSQLDATABASE || "FinalProyect"
 // })
 // Init objects
 db.init({
@@ -51,37 +51,9 @@ db.init({
 })
 ws.init(httpServer, port, db)
 
-
-
 // Define routes
-app.post('/api/login', login)
-async function login (req, res) {
-
-  let receivedPOST = await post.getPostObject(req)
-  let result = { status: "ERROR", message: "Unkown type" }
-
-  if (receivedPOST) {
-    if (receivedPOST.email.trim()==""){
-      result = {status: "ERROR", message: "Es requereix un correu electrònic"}
-    }else{
-      let contador = await db.query("select count(*) as cuenta from Users where userEmail='"+receivedPOST.email+"' and userPassword='"+receivedPOST.password+"'")
-      if (contador[0]["cuenta"]>0){
-        let token=createSessionToken();
-        await db.query("update Users set userSessionToken='"+token+"'where userEmail='"+receivedPOST.email+"' and userPassword='"+receivedPOST.password+"'");
-        result = {status: "OK", message: "Sessió iniciada", session_token: token}
-      }else{
-        result = {status: "ERROR", message: "El correu i/o la contrasenya estan malament"}
-      }
-    }
-  }
-
-  res.writeHead(200, { 'Content-Type': 'application/json' })
-  res.end(JSON.stringify(result))
-}
-
-// Define routes
-app.post('/api/signup', signup)
-async function signup (req, res) {
+app.post('/signup_client', signupClient)
+async function signupClient (req, res) {
 
   let receivedPOST = await post.getPostObject(req)
   let result = { status: "ERROR", message: "Unkown type" }
@@ -89,45 +61,40 @@ async function signup (req, res) {
   if (receivedPOST) {
     var regex = /^(\d{9})$/;
     if (regex.test(receivedPOST.phone)){
-      const existe = await db.query("select count(*) from Users where userPhoneNumber="+receivedPOST.phone+" or userEmail='"+receivedPOST.email+"'");
+      const existe = await db.query("select count(*) from Usuarios where telefono='"+receivedPOST.phone+"' or correo='"+receivedPOST.email+"'");
       if (Object.values(existe[0])==0){
         regex = /^[a-zA-ZñÑáéíóúÁÉÍÓÚ]+$/;
         if (regex.test(receivedPOST.name)){
           regex = /^[ a-zA-ZñÑáéíóúÁÉÍÓÚ]+$/;
           if (regex.test(receivedPOST.surname)){
             if (receivedPOST.surname.trim()==""){
-              result = {status: "ERROR", message: "El cognom no és vàlid"}
+              result = {status: "ERROR", message: "El apellido no es valido"}
             }else{
               regex = /^\w+([.-_+]?\w+)*@\w+([.-]?\w+)*(\.\w{2,10})+$/;
               if (regex.test(receivedPOST.email)){
-                regex = /^([a-zA-Z0-9 _-]+)$/;
+                regex = /^([a-zA-Z0-9 _-\u00f1\u00d1]+)$/;
                 if (regex.test(receivedPOST.password)){
-                  const fecha = new Date();
-                  const opciones = { timeZone: "Europe/Madrid" };
-                  const fechaEspaña = fecha.toLocaleString("es-ES", opciones);
-                  const fechaSQL = fechaEspaña.replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/, "$3-$2-$1 $4:$5:$6");
-                  let token=createSessionToken();
-                  await db.query("insert into Users(userPhoneNumber,userName, userLastName, userEmail, userBalance, userStatus, userStatusModifyTime, userPassword,userSessionToken) values('"+ receivedPOST.phone+"', '"+receivedPOST.name +"', '"+ receivedPOST.surname +"', '"+ receivedPOST.email +"', "+ 100 +", 'NO_VERFICAT', '"+fechaSQL+"', '"+receivedPOST.password+"', '"+token+"');");
-                  result = { status: "OK", message: "Usuari creat correctament", session_token: token}
+                  await db.query("insert into Usuarios(nombre, apellidos, correo, telefono, contraseña, esEmpresa) values('"+ receivedPOST.name+"', '"+receivedPOST.surname +"', '"+ receivedPOST.email +"', '"+ receivedPOST.phone +"', '"+receivedPOST.password+"', false);");
+                  result = { status: "OK", message: "Usuario creado correctamente"}
                 } else{
-                  result = {status: "ERROR", message: "La contrasenya només pot contenir lletres majúscules i minúscules i números"}
+                  result = {status: "ERROR", message: "La contraseña solo puede contener letras mayusculas i minusculas i números"}
                 }
               }
               else{
-                result = {status: "ERROR", message: "El correu no és vàlid"}
+                result = {status: "ERROR", message: "El correo no es valido"}
               }
             }
           }else{
-            result = {status: "ERROR", message: "El cognom no és vàlid"}
+            result = {status: "ERROR", message: "El apellido no es valido"}
           }
         }else{
-          result = {status: "ERROR", message: "El nom no és vàlid"}
+          result = {status: "ERROR", message: "El nombre no es valido"}
         }
       } else{
-        result = {status: "ERROR", message: "Ja existeix un usuari amb aquest número de telèfon o correu electrònic"};
+        result = {status: "ERROR", message: "Ya existe un usuario con este numero de telefono o correo electronico"};
       }
     }else{
-      result = {status: "ERROR", message: "El número de telèfon no és vàlid"}
+      result = {status: "ERROR", message: "El número de telefono no es valido"}
     }
         
     }
@@ -137,29 +104,114 @@ async function signup (req, res) {
 }
 
 // Define routes
-app.post('/api/logout', logout)
-async function logout (req, res) {
+app.post('/signup_company', signupCompany)
+async function signupCompany (req, res) {
 
   let receivedPOST = await post.getPostObject(req)
   let result = { status: "ERROR", message: "Unkown type" }
 
   if (receivedPOST) {
-    if (receivedPOST.session_token.trim()!=""){
-      const contador = await db.query("select count(*) as contador from Users where userSessionToken='"+receivedPOST.session_token+"'")
-      if (contador[0]["contador"]>0){
-        await db.query("update Users set userSessionToken=NULL where userSessionToken='"+receivedPOST.session_token+"'")
-        result = {status: "OK", message: "Sessió tancada correctament"}
+    var regex = /^(\d{9})$/;
+    if (regex.test(receivedPOST.phone)){
+      const existe = await db.query("select count(*) from Usuarios where telefono='"+receivedPOST.phone+"' or correo='"+receivedPOST.email+"' or nombreEmpresa='"+receivedPOST.nameCompany+"'");
+      if (Object.values(existe[0])==0){
+        regex = /^[a-zA-ZñÑáéíóúÁÉÍÓÚ]+$/;
+        if (regex.test(receivedPOST.name)){
+          regex = /^[ a-zA-ZñÑáéíóúÁÉÍÓÚ]+$/;
+          if (regex.test(receivedPOST.surname)){
+            if (receivedPOST.surname.trim()==""){
+              result = {status: "ERROR", message: "El apellido no es valido"}
+            }else{
+              regex = /^\w+([.-_+]?\w+)*@\w+([.-]?\w+)*(\.\w{2,10})+$/;
+              if (regex.test(receivedPOST.email)){
+                regex = /^([a-zA-Z0-9ñÑ_-]+)$/;
+                if (regex.test(receivedPOST.password)){
+                  regex = /^[ a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ]+$/;
+                  if (regex.test(receivedPOST.nameCompany)){
+                    if (receivedPOST.nameCompany.trim()==""){
+                      result = { status: "ERROR", message: "El nombre de la empresa no puede quedarse en blanco"}
+                    }else{
+                      await db.query("insert into Usuarios(nombreEmpresa,nombre, apellidos, correo, telefono, contraseña, esEmpresa) values('"+ receivedPOST.nameCompany+"','"+ receivedPOST.name+"', '"+receivedPOST.surname +"', '"+ receivedPOST.email +"', '"+ receivedPOST.phone +"', '"+receivedPOST.password+"', true);");
+                      result = { status: "OK", message: "Usuario creado correctamente"}
+                    }
+                  }else{
+                    result = { status: "ERROR", message: "El nombre de la empresa no es valido"}
+                  }
+                } else{
+                  result = {status: "ERROR", message: "La contraseña solo puede contener letras mayusculas i minusculas i números"}
+                }
+              }
+              else{
+                result = {status: "ERROR", message: "El correo no es valido"}
+              }
+            }
+          }else{
+            result = {status: "ERROR", message: "El apellido no es valido"}
+          }
+        }else{
+          result = {status: "ERROR", message: "El nombre no es valido"}
+        }
       } else{
-        result = {status: "ERROR", message: "No s'ha trobat la sessió"}
+        result = {status: "ERROR", message: "Ya existe un usuario con este numero de telefono, correo electronico o nombre de empresa"};
       }
     }else{
-      result = {status: "ERROR", message: "Es requereix token de sessio"}
+      result = {status: "ERROR", message: "El número de telefono no es valido"}
+    }
+        
     }
 
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
+
+// Define routes
+app.post('/login', login)
+async function login (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+    if (receivedPOST.email.trim()==""){
+      result = {status: "ERROR", message: "Es necesario un correo electrónico"}
+    }else{
+      let contador = await db.query("select count(*) as cuentas from Usuarios where correo='"+receivedPOST.email+"' and contraseña='"+receivedPOST.password+"'")
+      if (contador[0]["cuentas"]>0){
+        result = {status: "OK", message: "Session iniciada"}
+      }else{
+        result = {status: "ERROR", message: "El correo y/o la contraseña son incorrectas"}
+      }
+    }
   }
 
   res.writeHead(200, { 'Content-Type': 'application/json' })
   res.end(JSON.stringify(result))
-
 }
+
+// // Define routes
+// app.post('/api/logout', logout)
+// async function logout (req, res) {
+
+//   let receivedPOST = await post.getPostObject(req)
+//   let result = { status: "ERROR", message: "Unkown type" }
+
+//   if (receivedPOST) {
+//     if (receivedPOST.session_token.trim()!=""){
+//       const contador = await db.query("select count(*) as contador from Users where userSessionToken='"+receivedPOST.session_token+"'")
+//       if (contador[0]["contador"]>0){
+//         await db.query("update Users set userSessionToken=NULL where userSessionToken='"+receivedPOST.session_token+"'")
+//         result = {status: "OK", message: "Sessió tancada correctament"}
+//       } else{
+//         result = {status: "ERROR", message: "No s'ha trobat la sessió"}
+//       }
+//     }else{
+//       result = {status: "ERROR", message: "Es requereix token de sessio"}
+//     }
+
+//   }
+
+//   res.writeHead(200, { 'Content-Type': 'application/json' })
+//   res.end(JSON.stringify(result))
+
+// }
 
