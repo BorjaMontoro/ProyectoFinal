@@ -75,7 +75,8 @@ async function signupClient (req, res) {
                 regex = /^([a-zA-Z0-9 _-\u00f1\u00d1]+)$/;
                 if (regex.test(receivedPOST.password)){
                   await db.query("insert into Usuarios(nombre, apellidos, correo, telefono, password, esEmpresa) values('"+ receivedPOST.name+"', '"+receivedPOST.surname +"', '"+ receivedPOST.email +"', '"+ receivedPOST.phone +"', '"+receivedPOST.password+"', false);");
-                  result = { status: "OK", message: "Usuario creado correctamente"}
+                  let usu = await db.query("select id from Usuarios where correo='"+receivedPOST.email+"' and password='"+receivedPOST.password+"'")
+                  result = { status: "OK", message: "Usuario creado correctamente", id: usu[0]["id"]}
                 } else{
                   result = {status: "ERROR", message: "La contraseña solo puede contener letras mayusculas i minusculas i números"}
                 }
@@ -132,7 +133,8 @@ async function signupCompany (req, res) {
                       result = { status: "ERROR", message: "El nombre de la empresa no puede quedarse en blanco"}
                     }else{
                       await db.query("insert into Usuarios(nombreEmpresa,nombre, apellidos, correo, telefono, password, esEmpresa) values('"+ receivedPOST.nameCompany+"','"+ receivedPOST.name+"', '"+receivedPOST.surname +"', '"+ receivedPOST.email +"', '"+ receivedPOST.phone +"', '"+receivedPOST.password+"', true);");
-                      result = { status: "OK", message: "Usuario creado correctamente"}
+                      let usu = await db.query("select id from Usuarios where correo='"+receivedPOST.email+"' and password='"+receivedPOST.password+"'")
+                      result = { status: "OK", message: "Usuario creado correctamente", id: usu[0]["id"]}
                     }
                   }else{
                     result = { status: "ERROR", message: "El nombre de la empresa no es valido"}
@@ -175,12 +177,35 @@ async function login (req, res) {
     if (receivedPOST.email.trim()==""){
       result = {status: "ERROR", message: "Es necesario un correo electrónico"}
     }else{
-      let contador = await db.query("select count(*) as cuentas from Usuarios where correo='"+receivedPOST.email+"' and password='"+receivedPOST.password+"'")
+      let contador = await db.query("select count(*) as cuentas, id from Usuarios where correo='"+receivedPOST.email+"' and password='"+receivedPOST.password+"'")
       if (contador[0]["cuentas"]>0){
-        result = {status: "OK", message: "Session iniciada"}
+        result = {status: "OK", message: "Session iniciada", id: contador[0]["id"]}
       }else{
         result = {status: "ERROR", message: "El correo y/o la contraseña son incorrectas"}
       }
+    }
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
+
+// Define routes
+app.post('/create_advertisment', createAdvertisment)
+async function createAdvertisment (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+    if(isNaN(receivedPOST.direccion)){
+      if (receivedPOST.direccion.trim()==""){
+        result = {status: "ERROR", message: "Es necesaria una dirección"}
+      }else{
+        
+      }
+    }else{
+      result = {status: "ERROR", message: "La direccion no puede estar formada solo por numeros"}
     }
   }
 
