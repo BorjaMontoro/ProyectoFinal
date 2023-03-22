@@ -4,6 +4,7 @@ const fs          = require('fs').promises
 const webSockets  = require('./appWS.js')
 const post        = require('./utilsPost.js')
 const database    = require('./utilsMySQL.js')
+const moment = require('./moment.js')
 const wait        = require('./utilsWait.js')
 
 var db = new database()   // Database example: await db.query("SELECT * FROM test")
@@ -190,6 +191,24 @@ async function login (req, res) {
   res.end(JSON.stringify(result))
 }
 
+function comprobarHora(hora){
+  const format="HH:mm";
+  if (moment(hora, format, true).isValid()){
+    return true
+  }else{
+    const format="H:mm";
+    if (moment(hora, format, true).isValid()){
+      return true
+    }else{
+      return false
+    }
+  }
+}
+
+function cumplimientoFranjas(inicioDia,finalDia,inicioTarde,finalTarde){
+
+}
+
 // Define routes
 app.post('/create_advertisment', createAdvertisment)
 async function createAdvertisment (req, res) {
@@ -202,7 +221,14 @@ async function createAdvertisment (req, res) {
       if (receivedPOST.direccion.trim()==""){
         result = {status: "ERROR", message: "Es necesaria una dirección"}
       }else{
-        
+        if (comprobarHora(receivedPOST.diaInicioLunes) && comprobarHora(receivedPOST.diaFinalLunes) && comprobarHora(receivedPOST.tardeInicioLunes) && comprobarHora(receivedPOST.tardeFinalLunes)){
+          // await db.query("insert into Anuncios(idUsu, direccion) values("+ receivedPOST.id+", '"+receivedPOST.direccion+"');");
+          // const idAnuncio = await db.query("select id from Anuncios where idUsu="+receivedPOST.id);
+          // await db.query("insert into HorarioLunes(idAnuncio, horaInicio) values("+ idAnuncio[0]["id"]+", '"+receivedPOST.dia1Lunes+"');");
+          result = {status: "OK", message: "Hora valida"}
+        }else{
+          result = {status: "ERROR", message: "La hora no es valida"}
+        }
       }
     }else{
       result = {status: "ERROR", message: "La direccion no puede estar formada solo por numeros"}
