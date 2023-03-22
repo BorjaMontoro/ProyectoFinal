@@ -74,7 +74,7 @@ async function signupClient (req, res) {
               if (regex.test(receivedPOST.email)){
                 regex = /^([a-zA-Z0-9 _-\u00f1\u00d1]+)$/;
                 if (regex.test(receivedPOST.password)){
-                  await db.query("insert into Usuarios(nombre, apellidos, correo, telefono, contraseña, esEmpresa) values('"+ receivedPOST.name+"', '"+receivedPOST.surname +"', '"+ receivedPOST.email +"', '"+ receivedPOST.phone +"', '"+receivedPOST.password+"', false);");
+                  await db.query("insert into Usuarios(nombre, apellidos, correo, telefono, password, esEmpresa) values('"+ receivedPOST.name+"', '"+receivedPOST.surname +"', '"+ receivedPOST.email +"', '"+ receivedPOST.phone +"', '"+receivedPOST.password+"', false);");
                   result = { status: "OK", message: "Usuario creado correctamente"}
                 } else{
                   result = {status: "ERROR", message: "La contraseña solo puede contener letras mayusculas i minusculas i números"}
@@ -131,7 +131,7 @@ async function signupCompany (req, res) {
                     if (receivedPOST.nameCompany.trim()==""){
                       result = { status: "ERROR", message: "El nombre de la empresa no puede quedarse en blanco"}
                     }else{
-                      await db.query("insert into Usuarios(nombreEmpresa,nombre, apellidos, correo, telefono, contraseña, esEmpresa) values('"+ receivedPOST.nameCompany+"','"+ receivedPOST.name+"', '"+receivedPOST.surname +"', '"+ receivedPOST.email +"', '"+ receivedPOST.phone +"', '"+receivedPOST.password+"', true);");
+                      await db.query("insert into Usuarios(nombreEmpresa,nombre, apellidos, correo, telefono, password, esEmpresa) values('"+ receivedPOST.nameCompany+"','"+ receivedPOST.name+"', '"+receivedPOST.surname +"', '"+ receivedPOST.email +"', '"+ receivedPOST.phone +"', '"+receivedPOST.password+"', true);");
                       result = { status: "OK", message: "Usuario creado correctamente"}
                     }
                   }else{
@@ -175,7 +175,7 @@ async function login (req, res) {
     if (receivedPOST.email.trim()==""){
       result = {status: "ERROR", message: "Es necesario un correo electrónico"}
     }else{
-      let contador = await db.query("select count(*) as cuentas from Usuarios where correo='"+receivedPOST.email+"' and contraseña='"+receivedPOST.password+"'")
+      let contador = await db.query("select count(*) as cuentas from Usuarios where correo='"+receivedPOST.email+"' and password='"+receivedPOST.password+"'")
       if (contador[0]["cuentas"]>0){
         result = {status: "OK", message: "Session iniciada"}
       }else{
