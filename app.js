@@ -191,22 +191,64 @@ async function login (req, res) {
   res.end(JSON.stringify(result))
 }
 
-function comprobarHora(hora){
-  const format="HH:mm";
-  if (moment(hora, format, true).isValid()){
-    return true
-  }else{
-    const format="H:mm";
-    if (moment(hora, format, true).isValid()){
-      return true
-    }else{
-      return false
+function comprobarHora(horas){
+  let comprobacion=true
+  for (let i=0;i<horas.length-1;i++){
+    let hora= String(horas[i])
+    const format="HH:mm";
+    if (!moment(hora, format, true).isValid()){
+      const format="H:mm";
+      if (!moment(hora, format, true).isValid()){
+        if(!hora.trim()==""){
+          comprobacion=false;
+        }
+      }
     }
+    console.log(horas[i])
   }
+  return comprobacion
 }
 
 function cumplimientoFranjas(inicioDia,finalDia,inicioTarde,finalTarde){
+  let timeStrings
+  if (inicioDia==null || finalDia==null ||inicioTarde==null || finalTarde==null){
+    if (inicioDia==null && finalDia==null && inicioTarde==null && finalTarde==null){
+      return true;
+    }else if (inicioDia==null && finalDia==null){
+      timeStrings = [inicioTarde, finalTarde];
+    }else if (inicioTarde==null && finalTarde==null){
+     timeStrings = [inicioDia, finalDia];
+    }else{
+      return false
+    }
+  }else{
+   timeStrings = [inicioDia, finalDia, inicioTarde, finalTarde];
+  }
+  const timeObjs = timeStrings.map(timeString => {
+    const [hours, minutes] = timeString.split(':');
+    const currentDate = new Date();
+    return new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), hours, minutes);
+  });
+  for (let i = 0; i < timeObjs.length - 1; i++) {
+    if (timeObjs[i] >= timeObjs[i+1]) {
+      return false;
+    }
+  }
 
+  for (let i = 0; i < timeObjs.length - 1; i++) {
+    if (timeObjs[i].getTime() + (60 * 60 * 1000) >= timeObjs[i+1].getTime()) {
+      return false;
+    }
+  }
+  return true
+}
+
+function comprobarYRemplazar(str) {
+  if (str && str.trim().length > 0) {
+    return str;
+  } else {
+    return null;
+  }
 }
 
 // Define routes
@@ -221,17 +263,35 @@ async function createAdvertisment (req, res) {
       if (receivedPOST.direccion.trim()==""){
         result = {status: "ERROR", message: "Es necesaria una dirección"}
       }else{
-        if (comprobarHora(receivedPOST.diaInicioLunes) && comprobarHora(receivedPOST.diaFinalLunes) && comprobarHora(receivedPOST.tardeInicioLunes) && comprobarHora(receivedPOST.tardeFinalLunes)){
+        const horas=[receivedPOST.diaInicioLunes,receivedPOST.diaFinalLunes,receivedPOST.tardeInicioLunes,receivedPOST.tardeFinalLunes]
+        //if (comprobarHora(receivedPOST.diaInicioLunes) && comprobarHora(receivedPOST.diaFinalLunes) && comprobarHora(receivedPOST.tardeInicioLunes) && comprobarHora(receivedPOST.tardeFinalLunes)){
+        // comprobarHora(receivedPOST.diaInicioMartes) && comprobarHora(receivedPOST.diaFinalMartes) && comprobarHora(receivedPOST.tardeInicioMartes) && comprobarHora(receivedPOST.tardeFinalMartes) && 
+        // comprobarHora(receivedPOST.diaInicioMiercoles) && comprobarHora(receivedPOST.diaFinalMiercoles) && comprobarHora(receivedPOST.tardeInicioMiercoles) && comprobarHora(receivedPOST.tardeFinalMiercoles) &&
+        // comprobarHora(receivedPOST.diaInicioJueves) && comprobarHora(receivedPOST.diaFinalJueves) && comprobarHora(receivedPOST.tardeInicioJueves) && comprobarHora(receivedPOST.tardeFinalJueves) &&
+        // comprobarHora(receivedPOST.diaInicioViernes) && comprobarHora(receivedPOST.diaFinalViernes) && comprobarHora(receivedPOST.tardeInicioViernes) && comprobarHora(receivedPOST.tardeFinalViernes) &&
+        // comprobarHora(receivedPOST.diaInicioSabado) && comprobarHora(receivedPOST.diaFinalSabado) && comprobarHora(receivedPOST.tardeInicioSabado) && comprobarHora(receivedPOST.tardeFinalSabado) && 
+        // comprobarHora(receivedPOST.diaInicioDomingo) && comprobarHora(receivedPOST.diaFinalDomingo) && comprobarHora(receivedPOST.tardeInicioDomingo) && comprobarHora(receivedPOST.tardeFinalDomingo
+        if (comprobarHora(horas)){
+          let diaInicioLunes=comprobarYRemplazar(receivedPOST.diaInicioLunes)
+          let diaFinalLunes=comprobarYRemplazar(receivedPOST.diaFinalLunes)
+          let tardeInicioLunes=comprobarYRemplazar(receivedPOST.tardeInicioLunes)
+          let tardeFinalLunes=comprobarYRemplazar(receivedPOST.tardeFinalLunes)
+ 
           // await db.query("insert into Anuncios(idUsu, direccion) values("+ receivedPOST.id+", '"+receivedPOST.direccion+"');");
           // const idAnuncio = await db.query("select id from Anuncios where idUsu="+receivedPOST.id);
           // await db.query("insert into HorarioLunes(idAnuncio, horaInicio) values("+ idAnuncio[0]["id"]+", '"+receivedPOST.dia1Lunes+"');");
-          result = {status: "OK", message: "Hora valida"}
+          if(cumplimientoFranjas(diaInicioLunes,diaFinalLunes,tardeInicioLunes,tardeFinalLunes)){
+            result = {status: "OK", message: "Hora valida"}
+          }else{
+            result = {status: "ERROR", message: "Las franjas del horario no son correctas "}
+          }
+          //result = {status: "OK", message: "Hora valida"}
         }else{
           result = {status: "ERROR", message: "La hora no es valida"}
         }
       }
     }else{
-      result = {status: "ERROR", message: "La direccion no puede estar formada solo por numeros"}
+      result = {status: "ERROR", message: "La direccion no puede estar formada solo por numeros ni quedarse vacia"}
     }
   }
 
