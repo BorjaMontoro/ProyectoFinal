@@ -178,9 +178,9 @@ async function login (req, res) {
     if (receivedPOST.email.trim()==""){
       result = {status: "ERROR", message: "Es necesario un correo electrónico"}
     }else{
-      let contador = await db.query("select count(*) as cuentas, id from Usuarios where correo='"+receivedPOST.email+"' and password='"+receivedPOST.password+"'")
+      let contador = await db.query("select count(*) as cuentas, id, esEmpresa from Usuarios where correo='"+receivedPOST.email+"' and password='"+receivedPOST.password+"'")
       if (contador[0]["cuentas"]>0){
-        result = {status: "OK", message: "Session iniciada", id: contador[0]["id"]}
+        result = {status: "OK", message: "Session iniciada", id: contador[0]["id"], esEmpresa: contador[0]["esEmpresa"]}
       }else{
         result = {status: "ERROR", message: "El correo y/o la contraseña son incorrectas"}
       }
@@ -204,7 +204,6 @@ function comprobarHora(horas){
         }
       }
     }
-    console.log(horas[i])
   }
   return comprobacion
 }
@@ -224,7 +223,7 @@ function cumplimientoFranjas(inicioDia,finalDia,inicioTarde,finalTarde){
   }else{
    timeStrings = [inicioDia, finalDia, inicioTarde, finalTarde];
   }
-  const timeObjs = timeStrings.map(timeString => {
+    const timeObjs = timeStrings.map(timeString => {
     const [hours, minutes] = timeString.split(':');
     const currentDate = new Date();
     return new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), hours, minutes);
@@ -304,15 +303,11 @@ async function createAdvertisment (req, res) {
           let tardeInicioDomingo=comprobarYRemplazar(receivedPOST.tardeInicioDomingo)
           let tardeFinalDomingo=comprobarYRemplazar(receivedPOST.tardeFinalDomingo)
 
- 
-          // await db.query("insert into Anuncios(idUsu, direccion) values("+ receivedPOST.id+", '"+receivedPOST.direccion+"');");
-          // const idAnuncio = await db.query("select id from Anuncios where idUsu="+receivedPOST.id);
-          // await db.query("insert into HorarioLunes(idAnuncio, horaInicio) values("+ idAnuncio[0]["id"]+", '"+receivedPOST.dia1Lunes+"');");
           if(cumplimientoFranjas(diaInicioLunes,diaFinalLunes,tardeInicioLunes,tardeFinalLunes) && cumplimientoFranjas(diaInicioMartes,diaFinalMartes,tardeInicioMartes,tardeFinalMartes) && 
           cumplimientoFranjas(diaInicioMiercoles,diaFinalMiercoles,tardeInicioMiercoles,tardeFinalMiercoles) && cumplimientoFranjas(diaInicioJueves,diaFinalJueves,tardeInicioJueves,tardeFinalJueves) && 
           cumplimientoFranjas(diaInicioViernes,diaFinalViernes,tardeInicioViernes,tardeFinalViernes) && cumplimientoFranjas(diaInicioSabado,diaFinalSabado,tardeInicioSabado,tardeFinalSabado) && 
           cumplimientoFranjas(diaInicioDomingo,diaFinalDomingo,tardeInicioDomingo,tardeFinalDomingo)){
-            await db.query("insert into Anuncios(idUsu, direccion) values("+ receivedPOST.id+", '"+receivedPOST.direccion+"');");
+            await db.query("insert into Anuncios(idUsu, tipo, direccion) values("+ receivedPOST.id+", '"+receivedPOST.tipo+"', '"+receivedPOST.direccion+"');");
             const idAnuncio = await db.query("select id from Anuncios where idUsu="+receivedPOST.id);
             insertarDatos("HorarioLunes",idAnuncio[0]["id"],diaInicioLunes,diaFinalLunes)
             insertarDatos("HorarioLunes",idAnuncio[0]["id"],tardeInicioLunes,tardeFinalLunes)
@@ -328,8 +323,7 @@ async function createAdvertisment (req, res) {
             insertarDatos("HorarioSabado",idAnuncio[0]["id"],tardeInicioSabado,tardeFinalSabado)
             insertarDatos("HorarioDomingo",idAnuncio[0]["id"],diaInicioDomingo,diaFinalDomingo)
             insertarDatos("HorarioDomingo",idAnuncio[0]["id"],tardeInicioDomingo,tardeFinalDomingo)
-
-            result = {status: "OK", message: "Todas las franjas horarias son validas"}
+            result = {status: "OK", message: "El anuncio ha sido creado correctamente"}
           }else{
             result = {status: "ERROR", message: "Las franjas del horario no son correctas "}
           }
@@ -339,6 +333,56 @@ async function createAdvertisment (req, res) {
       }
     }else{
       result = {status: "ERROR", message: "La direccion no puede estar formada solo por numeros ni quedarse vacia"}
+    }
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
+
+// Define routes
+app.post('/have_advertisment', haveAdvertisment)
+async function haveAdvertisment (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+    const contador = await db.query("select count(*) as contador from Usuarios where id="+receivedPOST.id);
+    if (contador[0]["contador"]>0){
+      const anuncio = await db.query("select count(*) as contador from Anuncios where idUsu="+receivedPOST.id);
+      if (anuncio[0]["contador"]>0){
+        result = {status: "OK", message: "Si tiene un anuncio", anuncio: true}
+      }else{
+        result = {status: "OK", message: "No tiene un anuncio", anuncio: false}
+      }
+    }else{
+      result = {status: "ERROR", message: "No existe el usuario"}
+    }
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
+
+// Define routes
+app.post('/insert_services', insertServices)
+async function insertServices (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+    const contador = await db.query("select count(*) as contador from Usuarios where id="+receivedPOST.id);
+    if (contador[0]["contador"]>0){
+      const anuncio = await db.query("select count(*) as contador from Anuncios where idUsu="+receivedPOST.id);
+      if (anuncio[0]["contador"]>0){
+        result = {status: "OK", message: "Si tiene un anuncio", anuncio: true}
+      }else{
+        result = {status: "OK", message: "No tiene un anuncio", anuncio: false}
+      }
+    }else{
+      result = {status: "ERROR", message: "No existe el usuario"}
     }
   }
 
