@@ -366,8 +366,8 @@ async function haveAdvertisment (req, res) {
 }
 
 // Define routes
-app.post('/insert_services', insertServices)
-async function insertServices (req, res) {
+app.post('/insert_service', insertService)
+async function insertService (req, res) {
 
   let receivedPOST = await post.getPostObject(req)
   let result = { status: "ERROR", message: "Unkown type" }
@@ -375,11 +375,33 @@ async function insertServices (req, res) {
   if (receivedPOST) {
     const contador = await db.query("select count(*) as contador from Usuarios where id="+receivedPOST.id);
     if (contador[0]["contador"]>0){
-      const anuncio = await db.query("select count(*) as contador from Anuncios where idUsu="+receivedPOST.id);
-      if (anuncio[0]["contador"]>0){
-        result = {status: "OK", message: "Si tiene un anuncio", anuncio: true}
+      const anuncio = await db.query("select id from Anuncios where idUsu="+receivedPOST.id);
+      let idAnuncio=anuncio[0]["id"]
+      if(isNaN(receivedPOST.name)){
+        if (receivedPOST.name.trim()==""){
+          result = {status: "ERROR", message: "El nombre no puede quedarse vacio"}
+        }else{
+          const totalMinutos = parseInt(receivedPOST.duration);
+          const horas = Math.floor(totalMinutos / 60);
+          let minutos = totalMinutos % 60;
+          let horasStr = horas.toString();
+          if (horasStr === '0') {
+            horasStr = '00';
+          }
+          horasStr = horasStr.padStart(2, '0');
+          const minutosStr = minutos.toString().padStart(2, '0');
+          const tiempo = new Date();
+          tiempo.setHours(horasStr);
+          tiempo.setMinutes(minutosStr);
+          tiempo.setSeconds(0);
+          const tiempoStr = tiempo.toLocaleTimeString('en-ES', {hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+          await db.query("insert into Servicios(idAnuncio, nombre, duracion, precio) values("+ idAnuncio+", '"+receivedPOST.name+"', '"+tiempoStr+"', "+receivedPOST.price+")");
+          result = {status: "OK", message: "Se ha introducido correctamente el servicio"}
+
+        }
       }else{
-        result = {status: "OK", message: "No tiene un anuncio", anuncio: false}
+        result = {status: "ERROR", message: "El nombre no pueden ser solo numero ni quedarse vacio"}
       }
     }else{
       result = {status: "ERROR", message: "No existe el usuario"}
