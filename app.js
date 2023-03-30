@@ -381,24 +381,28 @@ async function insertService (req, res) {
         if (receivedPOST.name.trim()==""){
           result = {status: "ERROR", message: "El nombre no puede quedarse vacio"}
         }else{
-          const totalMinutos = parseInt(receivedPOST.duration);
-          const horas = Math.floor(totalMinutos / 60);
-          let minutos = totalMinutos % 60;
-          let horasStr = horas.toString();
-          if (horasStr === '0') {
-            horasStr = '00';
+          const servicio = await db.query("select count(*) as cont from Servicios where idAnuncio="+idAnuncio+" and nombre='"+receivedPOST.name+"'");
+          if(servicio[0]["cont"]==0){
+            let regex = /^-?\d*(\.\d+)?$/;
+            if (regex.test(receivedPOST.price)) {
+              const totalMinutos = parseInt(receivedPOST.duration);
+              const horas = Math.floor(totalMinutos / 60);
+              let minutos = totalMinutos % 60;
+              const horasStr = horas.toString().padStart(2, '0');
+              const minutosStr = minutos.toString().padStart(2, '0');
+              const tiempo = new Date();
+              tiempo.setHours(horasStr);
+              tiempo.setMinutes(minutosStr);
+              tiempo.setSeconds(0);
+              const tiempoStr = tiempo.toLocaleTimeString('en-ES', {hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'});
+              await db.query("insert into Servicios(idAnuncio, nombre, duracion, precio) values("+ idAnuncio+", '"+receivedPOST.name+"', '"+tiempoStr.replace("24","00")+"', "+receivedPOST.price+")");
+              result = {status: "OK", message: "Se ha introducido correctamente el servicio"}
+            } else {
+              result = {status: "ERROR", message: "El precio no es un numero valido"}
+            }
+          }else{
+            result = {status: "ERROR", message: "Ya existe un servicio con este mismo nombre"}
           }
-          horasStr = horasStr.padStart(2, '0');
-          const minutosStr = minutos.toString().padStart(2, '0');
-          const tiempo = new Date();
-          tiempo.setHours(horasStr);
-          tiempo.setMinutes(minutosStr);
-          tiempo.setSeconds(0);
-          const tiempoStr = tiempo.toLocaleTimeString('en-ES', {hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'});
-
-          await db.query("insert into Servicios(idAnuncio, nombre, duracion, precio) values("+ idAnuncio+", '"+receivedPOST.name+"', '"+tiempoStr+"', "+receivedPOST.price+")");
-          result = {status: "OK", message: "Se ha introducido correctamente el servicio"}
-
         }
       }else{
         result = {status: "ERROR", message: "El nombre no pueden ser solo numero ni quedarse vacio"}
