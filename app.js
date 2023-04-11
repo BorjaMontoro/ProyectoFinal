@@ -39,7 +39,7 @@ function shutDown() {
 //   host: process.env.MYSQLHOST || "localhost",
 //   port: process.env.MYSQLPORT || 3306,
 //   user: process.env.MYSQLUSER || "root",
-//   password: process.env.MYSQLPASSWORD || "",
+//   password: process.env.MYSQLPASSWORD || "1234",
 //   database: process.env.MYSQLDATABASE || "FinalProyect"
 // })
 // Init objects
@@ -307,7 +307,25 @@ async function createAdvertisment (req, res) {
           cumplimientoFranjas(diaInicioMiercoles,diaFinalMiercoles,tardeInicioMiercoles,tardeFinalMiercoles) && cumplimientoFranjas(diaInicioJueves,diaFinalJueves,tardeInicioJueves,tardeFinalJueves) && 
           cumplimientoFranjas(diaInicioViernes,diaFinalViernes,tardeInicioViernes,tardeFinalViernes) && cumplimientoFranjas(diaInicioSabado,diaFinalSabado,tardeInicioSabado,tardeFinalSabado) && 
           cumplimientoFranjas(diaInicioDomingo,diaFinalDomingo,tardeInicioDomingo,tardeFinalDomingo)){
-            await db.query("insert into Anuncios(idUsu, tipo, direccion) values("+ receivedPOST.id+", '"+receivedPOST.tipo+"', '"+receivedPOST.direccion+"');");
+            const fileBuffer = Buffer.from(receivedPOST.imagen, 'base64');
+            const path = "./private"
+            const anuncios = await db.query("select imagen from Anuncios")
+            let nameFile=`${createNameFile()}.jpg`;
+            let flag=false;
+            while(!flag){
+              flag=true
+              for (let i=0; i<anuncios.length;i++){
+                if (nameFile==anuncios[i]["imagen"]){
+                  nameFile=`${createNameFile()}.jpg`;
+                  flag=false;
+                  break;
+                } 
+              }
+            }
+            await fs.mkdir(path, { recursive: true }) // Crea el directori si no existeix
+            await fs.writeFile(`${path}/${nameFile}`, fileBuffer)
+
+            await db.query("insert into Anuncios(idUsu, tipo, direccion, imagen) values("+ receivedPOST.id+", '"+receivedPOST.tipo+"', '"+receivedPOST.direccion+"', '"+nameFile+"');");
             const idAnuncio = await db.query("select id from Anuncios where idUsu="+receivedPOST.id);
             insertarDatos("HorarioLunes",idAnuncio[0]["id"],diaInicioLunes,diaFinalLunes)
             insertarDatos("HorarioLunes",idAnuncio[0]["id"],tardeInicioLunes,tardeFinalLunes)
@@ -338,6 +356,31 @@ async function createAdvertisment (req, res) {
 
   res.writeHead(200, { 'Content-Type': 'application/json' })
   res.end(JSON.stringify(result))
+}
+
+function createNameFile(){
+  let charsList = [];
+  let tokenSize = 41;
+  let token = "";
+
+  for(i = 0; i < 10; i ++){
+    charsList.push(i);
+  }
+
+  for(i = 65; i <= 90; i++) {
+    charsList.push(String.fromCharCode(i));
+  }
+
+  for(i = 97; i <= 122; i++) {
+    charsList.push(String.fromCharCode(i));
+  }
+  
+  for(i = 0; i < tokenSize - 1; i++){
+    let randomNum = Math.round(Math.random()*(charsList.length - 1));
+    token += charsList[randomNum];
+  }
+
+  return token;
 }
 
 // Define routes
@@ -410,6 +453,42 @@ async function insertService (req, res) {
     }else{
       result = {status: "ERROR", message: "No existe el usuario"}
     }
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
+
+// Define routes
+app.post('/get_advertisments', getAdvertisments)
+async function getAdvertisments (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+    let anuncios;
+    if(receivedPOST.tipo=="Todos" && receivedPOST.search==""){
+      anuncios = await db.query("SELECT Usuarios.nombreEmpresa, Anuncios.tipo, Anuncios.direccion, Anuncios.imagen FROM Usuarios JOIN Anuncios ON Usuarios.id = Anuncios.idUsu;");
+    }else if(receivedPOST.tipo=="Todos" && receivedPOST.search!=""){
+      anuncios = await db.query("SELECT Usuarios.nombreEmpresa, Anuncios.tipo, Anuncios.direccion, Anuncios.imagen FROM Usuarios JOIN Anuncios ON Usuarios.id = Anuncios.idUsu where Usuarios.nombreEmpresa LIKE '%"+receivedPOST.search+"%';");
+    }else if(receivedPOST.tipo!="Todos" && receivedPOST.search==""){
+      anuncios = await db.query("SELECT Usuarios.nombreEmpresa, Anuncios.tipo, Anuncios.direccion, Anuncios.imagen FROM Usuarios JOIN Anuncios ON Usuarios.id = Anuncios.idUsu where Anuncios.tipo='"+receivedPOST.tipo+"';");
+    }else if(receivedPOST.tipo!="Todos" && receivedPOST.search!=""){
+      anuncios = await db.query("SELECT Usuarios.nombreEmpresa, Anuncios.tipo, Anuncios.direccion, Anuncios.imagen FROM Usuarios JOIN Anuncios ON Usuarios.id = Anuncios.idUsu where Anuncios.tipo='"+receivedPOST.tipo+"' and Usuarios.nombreEmpresa LIKE '%"+receivedPOST.search+"%';");
+    }
+
+    for (let i = 0; i < anuncios.length; i++) {
+      let image_name = anuncios[i].imagen;
+      //Utilizar nombre para sacar la imagen y sacar base64
+      
+      //Cambiar el nombre de la imagen al base 64 para poder mandarla al telefono
+      anuncios[i].imagen = "si+"+i;
+        
+    }
+      
+    
+    result = {status: "OK", message: "Anuncios", advertisments: anuncios}
   }
 
   res.writeHead(200, { 'Content-Type': 'application/json' })
