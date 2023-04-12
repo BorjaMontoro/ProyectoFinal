@@ -530,6 +530,15 @@ async function getServices (req, res) {
   res.end(JSON.stringify(result))
 }
 
+function modificarFormatHora(hora){
+  let partes = hora.split(":");
+
+  let horas = parseInt(partes[0]);
+  let minutos = partes[1];
+  
+  return horas + ":" + minutos;
+  
+}
 // Define routes
 app.post('/get_shedule', getShedule)
 async function getShedule (req, res) {
@@ -539,22 +548,143 @@ async function getShedule (req, res) {
 
   if (receivedPOST) {
     let telefono = await db.query("select telefono from Usuarios where nombreEmpresa='"+receivedPOST.name+"';");
+    let lunes1rTurno;
+    let lunes2oTurno;
+    let martes1rTurno;
+    let martes2oTurno;
+    let miercoles1rTurno;
+    let miercoles2oTurno;
+    let jueves1rTurno;
+    let jueves2oTurno;
+    let viernes1rTurno;
+    let viernes2oTurno;
+    let sabado1rTurno;
+    let sabado2oTurno;
+    let domingo1rTurno;
+    let domingo2oTurno;
 
     let lunesCont = await db.query("select count(*) as contador from HorarioLunes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+    if (lunesCont[0]["contador"]==0){
+      lunes1rTurno="Cerrado";
+      lunes2oTurno="Cerrado";
+    } else if(lunesCont[0]["contador"]==1){
+      let lunes = await db.query("select horaInicio, horaFin from HorarioLunes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      lunes1rTurno=modificarFormatHora(lunes[0]["horaInicio"])+" - "+modificarFormatHora(lunes[0]["horaFin"]);
+      lunes2oTurno="Cerrado";
+    } else if(lunesCont[0]["contador"]==2){
+      let lunes = await db.query("select horaInicio, horaFin from HorarioLunes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      lunes1rTurno=modificarFormatHora(lunes[0]["horaInicio"])+" - "+modificarFormatHora(lunes[0]["horaFin"]);
+      lunes2oTurno=modificarFormatHora(lunes[1]["horaInicio"])+" - "+modificarFormatHora(lunes[1]["horaFin"]);
+    }
 
-    let lunes = await db.query("select horaInicio, horaFin from HorarioLunes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
-    // if(lunes[0]["cont"]==0){
+    let martesCont = await db.query("select count(*) as contador from HorarioMartes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+    if (martesCont[0]["contador"]==0){
+      martes1rTurno="Cerrado";
+      martes2oTurno="Cerrado";
+    } else if(martesCont[0]["contador"]==1){
+      let martes = await db.query("select horaInicio, horaFin from HorarioMartes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      martes1rTurno=modificarFormatHora(martes[0]["horaInicio"])+" - "+modificarFormatHora(martes[0]["horaFin"]);
+      martes2oTurno="Cerrado";
+    } else if(martesCont[0]["contador"]==2){
+      let martes = await db.query("select horaInicio, horaFin from HorarioMartes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      martes1rTurno=modificarFormatHora(martes[0]["horaInicio"])+" - "+modificarFormatHora(martes[0]["horaFin"]);
+      martes2oTurno=modificarFormatHora(martes[1]["horaInicio"])+" - "+modificarFormatHora(martes[1]["horaFin"]);
+    }
 
-    // }
+    let miercolesCont = await db.query("select count(*) as contador from HorarioMiercoles where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+    if (miercolesCont[0]["contador"]==0){
+      miercoles1rTurno="Cerrado";
+      miercoles2oTurno="Cerrado";
+    } else if(miercolesCont[0]["contador"]==1){
+      let miercoles = await db.query("select horaInicio, horaFin from HorarioMiercoles where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      miercoles1rTurno=modificarFormatHora(miercoles[0]["horaInicio"])+" - "+modificarFormatHora(miercoles[0]["horaFin"]);
+      miercoles2oTurno="Cerrado";
+    } else if(miercolesCont[0]["contador"]==2){
+      let miercoles = await db.query("select horaInicio, horaFin from HorarioMiercoles where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      miercoles1rTurno=modificarFormatHora(miercoles[0]["horaInicio"])+" - "+modificarFormatHora(miercoles[0]["horaFin"]);
+      miercoles2oTurno=modificarFormatHora(miercoles[1]["horaInicio"])+" - "+modificarFormatHora(miercoles[1]["horaFin"]);
+    }
 
-      
-    result = {status: "OK", message: "Detalles empresa", phone: telefono[0]["telefono"], dilluns: lunes, contador: lunesCont[0]["contador"]}
+    let juevesCont = await db.query("select count(*) as contador from HorarioJueves where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+    if (juevesCont[0]["contador"]==0){
+      jueves1rTurno="Cerrado";
+      jueves2oTurno="Cerrado";
+    } else if(juevesCont[0]["contador"]==1){
+      let jueves = await db.query("select horaInicio, horaFin from HorarioJueves where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      jueves1rTurno=modificarFormatHora(jueves[0]["horaInicio"])+" - "+modificarFormatHora(jueves[0]["horaFin"]);
+      jueves2oTurno="Cerrado";
+    } else if(juevesCont[0]["contador"]==2){
+      let jueves = await db.query("select horaInicio, horaFin from HorarioJueves where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      jueves1rTurno=modificarFormatHora(jueves[0]["horaInicio"])+" - "+modificarFormatHora(jueves[0]["horaFin"]);
+      jueves2oTurno=modificarFormatHora(jueves[1]["horaInicio"])+" - "+modificarFormatHora(jueves[1]["horaFin"]);
+    }
+
+    let viernesCont = await db.query("select count(*) as contador from HorarioViernes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+    if (viernesCont[0]["contador"]==0){
+      viernes1rTurno="Cerrado";
+      viernes2oTurno="Cerrado";
+    } else if(viernesCont[0]["contador"]==1){
+      let viernes = await db.query("select horaInicio, horaFin from HorarioViernes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      viernes1rTurno=modificarFormatHora(viernes[0]["horaInicio"])+" - "+modificarFormatHora(viernes[0]["horaFin"]);
+      viernes2oTurno="Cerrado";
+    } else if(viernesCont[0]["contador"]==2){
+      let viernes = await db.query("select horaInicio, horaFin from HorarioViernes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      viernes1rTurno=modificarFormatHora(viernes[0]["horaInicio"])+" - "+modificarFormatHora(viernes[0]["horaFin"]);
+      viernes2oTurno=modificarFormatHora(viernes[1]["horaInicio"])+" - "+modificarFormatHora(viernes[1]["horaFin"]);
+    }
+
+    let sabadoCont = await db.query("select count(*) as contador from HorarioSabado where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+    if (sabadoCont[0]["contador"]==0){
+      sabado1rTurno="Cerrado";
+      sabado2oTurno="Cerrado";
+    } else if(sabadoCont[0]["contador"]==1){
+      let sabado = await db.query("select horaInicio, horaFin from HorarioSabado where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      sabado1rTurno=modificarFormatHora(sabado[0]["horaInicio"])+" - "+modificarFormatHora(sabado[0]["horaFin"]);
+      sabado2oTurno="Cerrado";
+    } else if(sabadoCont[0]["contador"]==2){
+      let sabado = await db.query("select horaInicio, horaFin from HorarioSabado where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      sabado1rTurno=modificarFormatHora(sabado[0]["horaInicio"])+" - "+modificarFormatHora(sabado[0]["horaFin"]);
+      sabado2oTurno=modificarFormatHora(sabado[1]["horaInicio"])+" - "+modificarFormatHora(sabado[1]["horaFin"]);
+    }
+
+    let domingoCont = await db.query("select count(*) as contador from HorarioDomingo where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+    if (domingoCont[0]["contador"]==0){
+      domingo1rTurno="Cerrado";
+      domingo2oTurno="Cerrado";
+    } else if(domingoCont[0]["contador"]==1){
+      let domingo = await db.query("select horaInicio, horaFin from HorarioDomingo where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      domingo1rTurno=modificarFormatHora(domingo[0]["horaInicio"])+" - "+modificarFormatHora(domingo[0]["horaFin"]);
+      domingo2oTurno="Cerrado";
+    } else if(domingoCont[0]["contador"]==2){
+      let domingo = await db.query("select horaInicio, horaFin from HorarioDomingo where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      domingo1rTurno=modificarFormatHora(domingo[0]["horaInicio"])+" - "+modificarFormatHora(domingo[0]["horaFin"]);
+      domingo2oTurno=modificarFormatHora(domingo[1]["horaInicio"])+" - "+modificarFormatHora(domingo[1]["horaFin"]);
+    }
+
+    result = {status: "OK", message: "Detalles empresa", phone: telefono[0]["telefono"], lunes1rTurno: lunes1rTurno, lunes2oTurno: lunes2oTurno, martes1rTurno: martes1rTurno, 
+    martes2oTurno: martes2oTurno, miercoles1rTurno: miercoles1rTurno, miercoles2oTurno: miercoles2oTurno, jueves1rTurno: jueves1rTurno, jueves2oTurno: jueves2oTurno, 
+    viernes1rTurno: viernes1rTurno, viernes2oTurno: viernes2oTurno, sabado1rTurno: sabado1rTurno, sabado2oTurno: sabado2oTurno, domingo1rTurno: domingo1rTurno, domingo2oTurno: domingo2oTurno}
   }
 
   res.writeHead(200, { 'Content-Type': 'application/json' })
   res.end(JSON.stringify(result))
 }
 
+// Define routes
+app.post('/get_dates', getDates)
+async function getDates (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+
+    result = {status: "OK", message: "Servicios por anuncio"}
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
 
 
 
@@ -586,42 +716,4 @@ async function getShedule (req, res) {
 // }
 
 
-// JSONObject obj2 = new JSONObject("{}");
-//         obj2.put("id", "1");
-//         obj2.put("direccion", "Cami vell");
-//         obj2.put("tipo", "Peluqueria");
-//         obj2.put("diaInicioLunes", "8:00");
-//         obj2.put("diaFinalLunes", "13:00");
-//         obj2.put("tardeInicioLunes", "18:00");
-//         obj2.put("tardeFinalLunes", "20:00");
-//         obj2.put("diaInicioMartes", "8:00");
-//         obj2.put("diaFinalMartes", "13:00");
-//         obj2.put("tardeInicioMartes", "18:00");
-//         obj2.put("tardeFinalMartes", "20:00");
-//         obj2.put("diaInicioMiercoles", "8:00");
-//         obj2.put("diaFinalMiercoles", "13:00");
-//         obj2.put("tardeInicioMiercoles", "18:00");
-//         obj2.put("tardeFinalMiercoles", "20:00");
-//         obj2.put("diaInicioJueves", "8:00");
-//         obj2.put("diaFinalJueves", "13:00");
-//         obj2.put("tardeInicioJueves", "18:00");
-//         obj2.put("tardeFinalJueves", "20:00");
-//         obj2.put("diaInicioViernes", "8:00");
-//         obj2.put("diaFinalViernes", "13:00");
-//         obj2.put("tardeInicioViernes", "18:00");
-//         obj2.put("tardeFinalViernes", "20:00");
-//         obj2.put("diaInicioSabado", "8:00");
-//         obj2.put("diaFinalSabado", "13:00");
-//         obj2.put("tardeInicioSabado", "");
-//         obj2.put("tardeFinalSabado", "");
-//         obj2.put("diaInicioDomingo", "  ");
-//         obj2.put("diaFinalDomingo", "");
-//         obj2.put("tardeInicioDomingo", "  ");
-//         obj2.put("tardeFinalDomingo", "");
-        
-
-//         UtilsHTTP.sendPOST(Main.protocol + "://" + Main.host + ":" + Main.port + "/create_advertisment", obj2.toString(), (response) -> {
-//             System.out.println(response);
-                
-//         });
 
