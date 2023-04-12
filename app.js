@@ -530,6 +530,33 @@ async function getServices (req, res) {
   res.end(JSON.stringify(result))
 }
 
+// Define routes
+app.post('/get_shedule', getShedule)
+async function getShedule (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+    let telefono = await db.query("select telefono from Usuarios where nombreEmpresa='"+receivedPOST.name+"';");
+
+    let lunesCont = await db.query("select count(*) as contador from HorarioLunes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+
+    let lunes = await db.query("select horaInicio, horaFin from HorarioLunes where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+    // if(lunes[0]["cont"]==0){
+
+    // }
+
+      
+    result = {status: "OK", message: "Detalles empresa", phone: telefono[0]["telefono"], dilluns: lunes, contador: lunesCont[0]["contador"]}
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
+
+
+
 
 // // Define routes
 // app.post('/api/logout', logout)
@@ -557,4 +584,44 @@ async function getServices (req, res) {
 //   res.end(JSON.stringify(result))
 
 // }
+
+
+// JSONObject obj2 = new JSONObject("{}");
+//         obj2.put("id", "1");
+//         obj2.put("direccion", "Cami vell");
+//         obj2.put("tipo", "Peluqueria");
+//         obj2.put("diaInicioLunes", "8:00");
+//         obj2.put("diaFinalLunes", "13:00");
+//         obj2.put("tardeInicioLunes", "18:00");
+//         obj2.put("tardeFinalLunes", "20:00");
+//         obj2.put("diaInicioMartes", "8:00");
+//         obj2.put("diaFinalMartes", "13:00");
+//         obj2.put("tardeInicioMartes", "18:00");
+//         obj2.put("tardeFinalMartes", "20:00");
+//         obj2.put("diaInicioMiercoles", "8:00");
+//         obj2.put("diaFinalMiercoles", "13:00");
+//         obj2.put("tardeInicioMiercoles", "18:00");
+//         obj2.put("tardeFinalMiercoles", "20:00");
+//         obj2.put("diaInicioJueves", "8:00");
+//         obj2.put("diaFinalJueves", "13:00");
+//         obj2.put("tardeInicioJueves", "18:00");
+//         obj2.put("tardeFinalJueves", "20:00");
+//         obj2.put("diaInicioViernes", "8:00");
+//         obj2.put("diaFinalViernes", "13:00");
+//         obj2.put("tardeInicioViernes", "18:00");
+//         obj2.put("tardeFinalViernes", "20:00");
+//         obj2.put("diaInicioSabado", "8:00");
+//         obj2.put("diaFinalSabado", "13:00");
+//         obj2.put("tardeInicioSabado", "");
+//         obj2.put("tardeFinalSabado", "");
+//         obj2.put("diaInicioDomingo", "  ");
+//         obj2.put("diaFinalDomingo", "");
+//         obj2.put("tardeInicioDomingo", "  ");
+//         obj2.put("tardeFinalDomingo", "");
+        
+
+//         UtilsHTTP.sendPOST(Main.protocol + "://" + Main.host + ":" + Main.port + "/create_advertisment", obj2.toString(), (response) -> {
+//             System.out.println(response);
+                
+//         });
 
