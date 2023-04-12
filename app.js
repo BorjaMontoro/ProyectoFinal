@@ -35,21 +35,21 @@ function shutDown() {
 }
 
 // Init objects
-// db.init({
-//   host: process.env.MYSQLHOST || "localhost",
-//   port: process.env.MYSQLPORT || 3306,
-//   user: process.env.MYSQLUSER || "root",
-//   password: process.env.MYSQLPASSWORD || "1234",
-//   database: process.env.MYSQLDATABASE || "FinalProyect"
-// })
-// Init objects
 db.init({
-  host: process.env.MYSQLHOST || "containers-us-west-110.railway.app",
-  port: process.env.MYSQLPORT || 7754,
+  host: process.env.MYSQLHOST || "localhost",
+  port: process.env.MYSQLPORT || 3306,
   user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "BzDYLaHqVGAQCfG9gtj6",
-  database: process.env.MYSQLDATABASE || "railway"
+  password: process.env.MYSQLPASSWORD || "1234",
+  database: process.env.MYSQLDATABASE || "FinalProyect"
 })
+// Init objects
+// db.init({
+//   host: process.env.MYSQLHOST || "containers-us-west-110.railway.app",
+//   port: process.env.MYSQLPORT || 7754,
+//   user: process.env.MYSQLUSER || "root",
+//   password: process.env.MYSQLPASSWORD || "BzDYLaHqVGAQCfG9gtj6",
+//   database: process.env.MYSQLDATABASE || "railway"
+// })
 ws.init(httpServer, port, db)
 
 // Define routes
@@ -481,19 +481,55 @@ async function getAdvertisments (req, res) {
     for (let i = 0; i < anuncios.length; i++) {
       let image_name = anuncios[i].imagen;
       //Utilizar nombre para sacar la imagen y sacar base64
-      
+      let base64Imagen = await fs.readFile(`./private/${image_name}`, { encoding: 'base64'})
       //Cambiar el nombre de la imagen al base 64 para poder mandarla al telefono
-      anuncios[i].imagen = "si+"+i;
-        
+      anuncios[i].imagen = base64Imagen;
     }
       
-    
     result = {status: "OK", message: "Anuncios", advertisments: anuncios}
   }
 
   res.writeHead(200, { 'Content-Type': 'application/json' })
   res.end(JSON.stringify(result))
 }
+
+function convertirDuracion(duracion) {
+  let horas = Math.floor(duracion / 60);
+  let minutos = duracion % 60;
+
+  if (horas > 0 && minutos > 0) {
+    return horas + 'h ' + minutos + 'm';
+  } else if (horas > 0) {
+    return horas + 'h';
+  } else {
+    return minutos + 'm';
+  }
+}
+
+// Define routes
+app.post('/get_services', getServices)
+async function getServices (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+    let servicios = await db.query("select nombre,duracion,precio from Servicios where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'));");
+
+    for (let i = 0; i < servicios.length; i++) {
+      let timeArray = servicios[i].duracion.split(":");
+      let hours = parseInt(timeArray[0]);
+      let minutes = parseInt(timeArray[1]);
+      servicios[i].duracion=convertirDuracion(hours * 60 + minutes);
+    }
+      
+    result = {status: "OK", message: "Servicios por anuncio", services: servicios}
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
+
 
 // // Define routes
 // app.post('/api/logout', logout)
