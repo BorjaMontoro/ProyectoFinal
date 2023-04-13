@@ -670,6 +670,25 @@ async function getShedule (req, res) {
   res.end(JSON.stringify(result))
 }
 
+function convertToMinutes(duration) {
+  let hours = 0;
+  let minutes = 0;
+
+  // Si la duración contiene "h", extraer las horas
+  if (duration.includes("h")) {
+    let durationArray = duration.split("h");
+    hours = parseInt(durationArray[0]);
+    duration = durationArray[1].trim();
+  }
+
+  // Si la duración contiene "m", extraer los minutos
+  if (duration.includes("m")) {
+    minutes = parseInt(duration.replace("m", "").trim());
+  }
+
+  return hours * 60 + minutes;
+}
+
 // Define routes
 app.post('/get_dates', getDates)
 async function getDates (req, res) {
@@ -678,8 +697,56 @@ async function getDates (req, res) {
   let result = { status: "ERROR", message: "Unkown type" }
 
   if (receivedPOST) {
+    let inicio = new Date(receivedPOST.year,receivedPOST.month,receivedPOST.day);
+    let fin = new Date(receivedPOST.year,receivedPOST.month,receivedPOST.day);
+    let tablasHorarios = ['HorarioDomingo', 'HorarioLunes', 'HorarioMartes', 'HorarioMiercoles', 'HorarioJueves', 'HorarioViernes', 'HorarioSabado'];
+    let tabla = tablasHorarios[inicio.getDay()];
+    let horas=[];
+    let horasDisponibles=[];
+    let duracionServicio=convertToMinutes(receivedPOST.duration);
+    let cont = await db.query("select count(*) as contador from "+tabla+" where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+    if (cont[0]["contador"]==0){
+      horasDisponibles.push("No hay horas disponibles")
+    } else if(cont[0]["contador"]==1){
+      let dia = await db.query("select horaInicio, horaFin from "+tabla+" where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      inicio.setHours(parseInt(dia[0]["horaInicio"].substr(0, 2)), parseInt(dia[0]["horaInicio"].substr(3, 2)), parseInt(dia[0]["horaInicio"].substr(6, 2)), 0);
 
-    result = {status: "OK", message: "Servicios por anuncio"}
+      fin.setHours(parseInt(dia[0]["horaFin"].substr(0, 2)), parseInt(dia[0]["horaFin"].substr(3, 2)), parseInt(dia[0]["horaFin"].substr(6, 2)), 0);
+      let citas = await db.query("select idServicio, fecha from Citas where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by fecha ASC");
+
+      let hora = new Date(inicio.getTime());
+      while (hora < fin) {
+        horas.push(new Date(hora));
+        hora.setMinutes(hora.getMinutes() + duracionServicio);
+      }
+
+      for(let i=0;i<citas.length;i++){
+        let duracion = await db.query("select duracion from Servicios where id="+citas[i]["idServicio"]+" and idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+        let cita = new Date(citas[i]["fecha"]);
+        let citaFinal = new Date(citas[i]["fecha"]);
+        let timeArray = duracion[0]["duracion"].split(":");
+        let horas = parseInt(timeArray[0]);
+        let minutos = parseInt(timeArray[1]);
+        citaFinal.setMinutes(citaFinal.getMinutes() + (horas*60+minutos));
+        //Comprobar q falla
+        for (let j = 0; j < horas.length; j++) {
+          if (horas[j] >= cita && horas[j] < citaFinal) {
+            horas.splice(j, 1);
+            j--;
+          }
+        }
+
+      }
+      horasDisponibles = horas.map(hora => hora.getHours()+ ':' + hora.getMinutes().toString().padStart(2, '0'));
+
+
+      
+    } else if(cont[0]["contador"]==2){
+      let dia = await db.query("select horaInicio, horaFin from "+tabla+" where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
+      domingo1rTurno=modificarFormatHora(dia[0]["horaInicio"])+" - "+modificarFormatHora(dia[0]["horaFin"]);
+      domingo2oTurno=modificarFormatHora(dia[1]["horaInicio"])+" - "+modificarFormatHora(dia[1]["horaFin"]);
+    }
+    result = {status: "OK", message: "Fechas", hours: horasDisponibles}
   }
 
   res.writeHead(200, { 'Content-Type': 'application/json' })
