@@ -715,7 +715,8 @@ async function getDates (req, res) {
       let citas = await db.query("select idServicio, fecha from Citas where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by fecha ASC");
 
       let hora = new Date(inicio.getTime());
-      while (hora < fin) {
+      let horaProbar = new Date(inicio.getTime()); 
+      while (hora < fin && horaProbar.setMinutes(horaProbar.getMinutes() + duracionServicio) <= fin) {
         horas.push(new Date(hora));
         hora.setMinutes(hora.getMinutes() + duracionServicio);
       }
@@ -725,12 +726,15 @@ async function getDates (req, res) {
         let cita = new Date(citas[i]["fecha"]);
         let citaFinal = new Date(citas[i]["fecha"]);
         let timeArray = duracion[0]["duracion"].split(":");
-        let horas = parseInt(timeArray[0]);
+        let hora = parseInt(timeArray[0]);
         let minutos = parseInt(timeArray[1]);
-        citaFinal.setMinutes(citaFinal.getMinutes() + (horas*60+minutos));
-        //Comprobar q falla
+        citaFinal.setMinutes(citaFinal.getMinutes() + (hora*60+minutos));
         for (let j = 0; j < horas.length; j++) {
-          if (horas[j] >= cita && horas[j] < citaFinal) {
+          let horaInicio = horas[j];
+          let horaFinal = new Date(horas[j].getTime());
+          horaFinal.setMinutes(horaFinal.getMinutes() + duracionServicio);
+  
+          if (horaFinal > cita && horaInicio < citaFinal) {
             horas.splice(j, 1);
             j--;
           }
@@ -743,8 +747,52 @@ async function getDates (req, res) {
       
     } else if(cont[0]["contador"]==2){
       let dia = await db.query("select horaInicio, horaFin from "+tabla+" where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by horaInicio ASC;");
-      domingo1rTurno=modificarFormatHora(dia[0]["horaInicio"])+" - "+modificarFormatHora(dia[0]["horaFin"]);
-      domingo2oTurno=modificarFormatHora(dia[1]["horaInicio"])+" - "+modificarFormatHora(dia[1]["horaFin"]);
+      inicio.setHours(parseInt(dia[0]["horaInicio"].substr(0, 2)), parseInt(dia[0]["horaInicio"].substr(3, 2)), parseInt(dia[0]["horaInicio"].substr(6, 2)), 0);
+
+      fin.setHours(parseInt(dia[0]["horaFin"].substr(0, 2)), parseInt(dia[0]["horaFin"].substr(3, 2)), parseInt(dia[0]["horaFin"].substr(6, 2)), 0);
+      let citas = await db.query("select idServicio, fecha from Citas where idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"')) order by fecha ASC");
+
+      let hora = new Date(inicio.getTime());
+      let horaProbar = new Date(inicio.getTime()); 
+      while (hora < fin && horaProbar.setMinutes(horaProbar.getMinutes() + duracionServicio) <= fin) {
+        horas.push(new Date(hora));
+        hora.setMinutes(hora.getMinutes() + duracionServicio);
+      }
+      let inicio2 = new Date(receivedPOST.year,receivedPOST.month,receivedPOST.day);
+      let fin2 = new Date(receivedPOST.year,receivedPOST.month,receivedPOST.day);
+      inicio2.setHours(parseInt(dia[1]["horaInicio"].substr(0, 2)), parseInt(dia[1]["horaInicio"].substr(3, 2)), parseInt(dia[0]["horaInicio"].substr(6, 2)), 0);
+
+      fin2.setHours(parseInt(dia[1]["horaFin"].substr(0, 2)), parseInt(dia[1]["horaFin"].substr(3, 2)), parseInt(dia[0]["horaFin"].substr(6, 2)), 0);
+      
+      hora = new Date(inicio2.getTime());
+      horaProbar = new Date(inicio2.getTime()); 
+      while (hora < fin2 && horaProbar.setMinutes(horaProbar.getMinutes() + duracionServicio) <= fin2) {
+        horas.push(new Date(hora));
+        hora.setMinutes(hora.getMinutes() + duracionServicio);
+      }
+
+      for(let i=0;i<citas.length;i++){
+        let duracion = await db.query("select duracion from Servicios where id="+citas[i]["idServicio"]+" and idAnuncio=(select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"'))");
+        let cita = new Date(citas[i]["fecha"]);
+        let citaFinal = new Date(citas[i]["fecha"]);
+        let timeArray = duracion[0]["duracion"].split(":");
+        let hora = parseInt(timeArray[0]);
+        let minutos = parseInt(timeArray[1]);
+        citaFinal.setMinutes(citaFinal.getMinutes() + (hora*60+minutos));
+        for (let j = 0; j < horas.length; j++) {
+          let horaInicio = horas[j];
+          let horaFinal = new Date(horas[j].getTime());
+          horaFinal.setMinutes(horaFinal.getMinutes() + duracionServicio);
+  
+          if (horaFinal > cita && horaInicio < citaFinal) {
+            horas.splice(j, 1);
+            j--;
+          }
+        }
+
+      }
+      horasDisponibles = horas.map(hora => hora.getHours()+ ':' + hora.getMinutes().toString().padStart(2, '0'));
+
     }
     result = {status: "OK", message: "Fechas", hours: horasDisponibles}
   }
@@ -754,6 +802,39 @@ async function getDates (req, res) {
 }
 
 
+app.post('/save_date', saveDate)
+async function saveDate (req, res) {
+
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if (receivedPOST) {
+    let timeArray = receivedPOST.hour.split(":");
+    let hours = parseInt(timeArray[0]);
+    let minutes = parseInt(timeArray[1]);
+    
+    const date = new Date(receivedPOST.year, receivedPOST.month, receivedPOST.day, hours, minutes);
+
+    let isoString = date.toISOString();
+
+    isoString = new Date(isoString).toLocaleString('es-ES', {
+      timeZone: 'Europe/Madrid',
+      hour12: false,
+    });
+    const components = isoString.split(/[/, :]/);
+    const spanishDateString = `${components[2]}-${components[1]}-${components[0]} ${components[4]}:${components[5]}:${components[6]}`;
+
+    let idAnuncio = await db.query("select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"');");
+
+    let idServicio = await db.query("select id from Servicios where idAnuncio="+idAnuncio[0]["id"]+" and nombre='"+receivedPOST.nameService+"';");
+    await db.query("insert into Citas (idAnuncio,idServicio,fecha) values("+idAnuncio[0]["id"]+","+idServicio[0]["id"]+",'"+spanishDateString+"');");
+
+    result = {status: "OK", message: "Hora reservada correctamente"}
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
 
 // // Define routes
 // app.post('/api/logout', logout)
