@@ -35,21 +35,21 @@ function shutDown() {
 }
 
 // Init objects
-db.init({
-  host: process.env.MYSQLHOST || "localhost",
-  port: process.env.MYSQLPORT || 3306,
-  user: process.env.MYSQLUSER || "root",
-  password: process.env.MYSQLPASSWORD || "1234",
-  database: process.env.MYSQLDATABASE || "FinalProyect"
-})
-// Init objects
 // db.init({
-//   host: process.env.MYSQLHOST || "containers-us-west-110.railway.app",
-//   port: process.env.MYSQLPORT || 7754,
+//   host: process.env.MYSQLHOST || "localhost",
+//   port: process.env.MYSQLPORT || 3306,
 //   user: process.env.MYSQLUSER || "root",
-//   password: process.env.MYSQLPASSWORD || "BzDYLaHqVGAQCfG9gtj6",
-//   database: process.env.MYSQLDATABASE || "railway"
+//   password: process.env.MYSQLPASSWORD || "1234",
+//   database: process.env.MYSQLDATABASE || "FinalProyect"
 // })
+// Init objects
+db.init({
+  host: process.env.MYSQLHOST || "containers-us-west-129.railway.app",
+  port: process.env.MYSQLPORT || 7160,
+  user: process.env.MYSQLUSER || "root",
+  password: process.env.MYSQLPASSWORD || "TlRul3x8oMiUuTPK5E2M",
+  database: process.env.MYSQLDATABASE || "railway"
+})
 ws.init(httpServer, port, db)
 
 // Define routes
