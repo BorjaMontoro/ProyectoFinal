@@ -815,14 +815,10 @@ async function saveDate (req, res) {
     
     const date = new Date(receivedPOST.year, receivedPOST.month, receivedPOST.day, hours, minutes);
 
-    let isoString = date.toISOString();
-
-    isoString = new Date(isoString).toLocaleString('es-ES', {
-      timeZone: 'Europe/Madrid',
-      hour12: false,
-    });
-    const components = isoString.split(/[/, :]/);
-    const spanishDateString = `${components[2]}-${components[1]}-${components[0]} ${components[4]}:${components[5]}:${components[6]}`;
+    const opciones = { timeZone: "Europe/Madrid" };
+    const fechaEspaña = date.toLocaleString("es-ES", opciones);
+    const spanishDateString = fechaEspaña.replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/, "$3-$2-$1 $4:$5:$6");
+                
 
     let idAnuncio = await db.query("select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"');");
 
