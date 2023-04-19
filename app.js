@@ -814,7 +814,7 @@ async function saveDate (req, res) {
     let minutes = parseInt(timeArray[1]);
     
     const date = new Date(receivedPOST.year, receivedPOST.month, receivedPOST.day, hours, minutes);
-
+    date.setHours(date.getHours()-2);
     const opciones = { timeZone: "Europe/Madrid" };
     const fechaEspaña = date.toLocaleString("es-ES", opciones);
     const spanishDateString = fechaEspaña.replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/, "$3-$2-$1 $4:$5:$6");
