@@ -835,7 +835,47 @@ async function saveDate (req, res) {
   res.writeHead(200, { 'Content-Type': 'application/json' })
   res.end(JSON.stringify(result))
 }
+app.post('/get_user',get_user)
+async function get_user(req,res){
+  let receivedPOST = await post.getPostObject(req)
+  let result = {}
 
+  if(receivedPOST){
+    try{
+      let user = await db.query("select * from Usuarios where id="+receivedPOST.id+";")
+      result = {status:"OK", user: user}
+    }
+    catch{
+      result = { status: "ERROR", message: "Error with user" }
+    }
+  }
+  else{
+    result = { status: "ERROR", message: "Unkown type" }
+  }
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+}
+app.post('/get_image',get_image)
+async function get_image(req,res){
+  let receivedPOST = await post.getPostObject(req)
+  let result = {}
+
+  if(receivedPOST){
+    try{
+      let anuncio = await db.query("select * from Anuncios where idUsu="+receivedPOST.id+";")
+      result = {status:"OK", anuncio: anuncio}
+    }
+    catch{
+      result = { status: "ERROR", message: "Error with image" }
+    }
+  }
+  else{
+    result = { status: "ERROR", message: "Unkown type" }
+  }
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+
+}
 // // Define routes
 // app.post('/api/logout', logout)
 // async function logout (req, res) {
