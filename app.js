@@ -741,7 +741,18 @@ async function getDates (req, res) {
         }
 
       }
-      horasDisponibles = horas.map(hora => hora.getHours()+ ':' + hora.getMinutes().toString().padStart(2, '0'));
+
+      let now = new Date();
+      let horasValidas = [];
+
+      for (let i = 0; i < horas.length; i++) {
+        let hora = horas[i];
+        if (hora > now) { 
+          horasValidas.push(hora);
+        }
+      }
+
+      horasDisponibles = horasValidas.map(hora => hora.getHours()+ ':' + hora.getMinutes().toString().padStart(2, '0'));
 
 
       
@@ -791,7 +802,17 @@ async function getDates (req, res) {
         }
 
       }
-      horasDisponibles = horas.map(hora => hora.getHours()+ ':' + hora.getMinutes().toString().padStart(2, '0'));
+      let now = new Date();
+      let horasValidas = [];
+
+      for (let i = 0; i < horas.length; i++) {
+        let hora = horas[i];
+        if (hora > now) { 
+          horasValidas.push(hora);
+        }
+      }
+
+      horasDisponibles = horasValidas.map(hora => hora.getHours()+ ':' + hora.getMinutes().toString().padStart(2, '0'));
 
     }
     result = {status: "OK", message: "Fechas", hours: horasDisponibles}
