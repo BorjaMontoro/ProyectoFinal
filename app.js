@@ -858,13 +858,8 @@ async function get_user(req,res){
   let result = {}
 
   if(receivedPOST){
-    try{
       let user = await db.query("select * from Usuarios where id="+receivedPOST.id+";")
       result = {status:"OK", user: user}
-    }
-    catch{
-      result = { status: "ERROR", message: "Error with user" }
-    }
   }
   else{
     result = { status: "ERROR", message: "Unkown type" }
