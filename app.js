@@ -743,6 +743,7 @@ async function getDates (req, res) {
       }
 
       let now = new Date();
+      now.setHours(now.getHours()+2)
       let horasValidas = [];
 
       for (let i = 0; i < horas.length; i++) {
@@ -907,7 +908,53 @@ async function getClientDates(req,res){
       citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha <= NOW();")
 
     }
-    result = {status: "OK", message: "Las citas", citas: citas}
+    let nuevaListaCitas = [];
+
+    for (let i = 0; i < citas.length; i++) {
+
+      let idServicio = citas[i].idServicio;
+      let idAnuncio = citas[i].idAnuncio;
+      let fecha = new Date(citas[i].fecha);
+
+      let nombreServicio = await db.query("select nombre from Servicios where id="+idServicio);
+      nombreServicio = nombreServicio[0]["nombre"]; 
+      let nombreEmpresa = await db.query("select Usuarios.nombreEmpresa from Usuarios join Anuncios on Usuarios.id = Anuncios.idUsu where Anuncios.id="+idAnuncio);
+      nombreEmpresa = nombreEmpresa[0]["nombreEmpresa"]
+
+      let hora = fecha.getHours();
+      let minutos = fecha.getMinutes();
+      let segundos = fecha.getSeconds();
+
+      if (hora < 10) {
+        hora = "0" + hora;
+      }
+      if (minutos < 10) {
+        minutos = "0" + minutos;
+      }
+      if (segundos < 10) {
+        segundos = "0" + segundos;
+      }
+
+      let horaCompleta = hora + ":" + minutos + ":" + segundos; 
+      
+      const meses = [
+        "Enero", "Febrero", "Marzo", "Abril",
+        "Mayo", "Junio", "Julio", "Agosto",
+        "Septiembre", "Octubre", "Noviembre", "Diciembre"
+      ];
+
+      let nuevaCita = {
+        nombreServicio: nombreServicio,
+        nombreEmpresa: nombreEmpresa,
+        mes: meses[fecha.getMonth()], 
+        dia: fecha.getDate(),
+        hora: modificarFormatHora(horaCompleta),
+        year: fecha.getFullYear()
+      };
+
+      nuevaListaCitas.push(nuevaCita);
+    }
+    result = {status: "OK", message: "Las citas", citas: nuevaListaCitas}
     
     
   }
