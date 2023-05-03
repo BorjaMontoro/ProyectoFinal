@@ -852,6 +852,8 @@ async function saveDate (req, res) {
   res.writeHead(200, { 'Content-Type': 'application/json' })
   res.end(JSON.stringify(result))
 }
+
+
 app.post('/get_user',get_user)
 async function get_user(req,res){
   let receivedPOST = await post.getPostObject(req)
@@ -867,6 +869,8 @@ async function get_user(req,res){
   res.writeHead(200, { 'Content-Type': 'application/json' })
   res.end(JSON.stringify(result))
 }
+
+
 app.post('/get_image',get_image)
 async function get_image(req,res){
   let receivedPOST = await post.getPostObject(req)
@@ -888,32 +892,31 @@ async function get_image(req,res){
   res.end(JSON.stringify(result))
 
 }
-// // Define routes
-// app.post('/api/logout', logout)
-// async function logout (req, res) {
 
-//   let receivedPOST = await post.getPostObject(req)
-//   let result = { status: "ERROR", message: "Unkown type" }
+app.post('/get_client_dates',getClientDates)
+async function getClientDates(req,res){
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
 
-//   if (receivedPOST) {
-//     if (receivedPOST.session_token.trim()!=""){
-//       const contador = await db.query("select count(*) as contador from Users where userSessionToken='"+receivedPOST.session_token+"'")
-//       if (contador[0]["contador"]>0){
-//         await db.query("update Users set userSessionToken=NULL where userSessionToken='"+receivedPOST.session_token+"'")
-//         result = {status: "OK", message: "Sessió tancada correctament"}
-//       } else{
-//         result = {status: "ERROR", message: "No s'ha trobat la sessió"}
-//       }
-//     }else{
-//       result = {status: "ERROR", message: "Es requereix token de sessio"}
-//     }
+  if(receivedPOST){
+    let citas
+    if (receivedPOST.status=="Pending"){
+      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha > NOW();")
 
-//   }
+    }else if (receivedPOST.status=="Complete"){
+      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha <= NOW();")
 
-//   res.writeHead(200, { 'Content-Type': 'application/json' })
-//   res.end(JSON.stringify(result))
+    }
+    result = {status: "OK", message: "Las citas", citas: citas}
+    
+    
+  }
 
-// }
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+
+}
+
 
 
 
