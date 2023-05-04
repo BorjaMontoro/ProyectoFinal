@@ -880,7 +880,12 @@ async function get_image(req,res){
   if(receivedPOST){
     try{
       let anuncio = await db.query("select * from Anuncios where idUsu="+receivedPOST.id+";")
-      result = {status:"OK", anuncio: anuncio}
+
+      let image_name = anuncio[0].imagen;
+
+      let base64Imagen = await fs.readFile(`./private/${image_name}`, { encoding: 'base64'})
+      
+      result = {status:"OK", anuncio: base64Imagen}
     }
     catch{
       result = { status: "ERROR", message: "Error with image" }
@@ -955,6 +960,52 @@ async function getClientDates(req,res){
       nuevaListaCitas.push(nuevaCita);
     }
     result = {status: "OK", message: "Las citas", citas: nuevaListaCitas}
+    
+    
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+
+}
+
+app.post('/get_company_dates',getCompanyDates)
+async function getCompanyDates(req,res){
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if(receivedPOST){
+    let date = new Date(receivedPOST.year, receivedPOST.month, receivedPOST.day);
+    date.setHours(4,0,0)
+    let fechaCita = date.toISOString().slice(0, 10);
+    let citas = await db.query("select Usuarios.nombre as nombreUsuario, Servicios.nombre as nombreServicio, Servicios.duracion, Citas.fecha from Citas join Usuarios on Usuarios.id = Citas.idUsu join Servicios on Servicios.id = Citas.idServicio where Citas.idAnuncio = (select id from Anuncios where idUsu="+receivedPOST.id+") and date(Citas.fecha) = '"+fechaCita+"' order by Citas.fecha ASC")
+
+    for (let i = 0; i < citas.length; i++) {
+      let fechaObj = new Date(citas[i].fecha);
+      let hora = fechaObj.getHours();
+      let minutos = fechaObj.getMinutes();
+      let segundos = fechaObj.getSeconds();
+      let horaFormateada = `${hora.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+      citas[i].horaInicio = modificarFormatHora(`${horaFormateada}`);
+
+      let [horas, min, seg] = citas[i].duracion.split(":").map(componente => parseInt(componente, 10));
+      let duracionSegundos = horas * 3600 + min * 60 + seg;
+      let fechaObj2 = new Date(citas[i].fecha);
+      fechaObj2.setSeconds(fechaObj2.getSeconds()+duracionSegundos)
+      hora = fechaObj2.getHours();
+      minutos = fechaObj2.getMinutes();
+      segundos = fechaObj2.getSeconds();
+      horaFormateada = `${hora.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+
+      citas[i].horaFin = modificarFormatHora(`${horaFormateada}`);
+
+
+      delete citas[i].fecha;
+      delete citas[i].duracion;
+
+    }
+
+    result = {status: "OK", message: "Las citas", citas: citas}
     
     
   }
