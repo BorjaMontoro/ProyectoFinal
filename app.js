@@ -804,6 +804,7 @@ async function getDates (req, res) {
 
       }
       let now = new Date();
+      now.setHours(now.getHours()+2)
       let horasValidas = [];
 
       for (let i = 0; i < horas.length; i++) {
