@@ -846,7 +846,7 @@ async function saveDate (req, res) {
     let idAnuncio = await db.query("select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"');");
 
     let idServicio = await db.query("select id from Servicios where idAnuncio="+idAnuncio[0]["id"]+" and nombre='"+receivedPOST.nameService+"';");
-    await db.query("insert into Citas (idAnuncio,idServicio,fecha) values("+idAnuncio[0]["id"]+","+idServicio[0]["id"]+",'"+spanishDateString+"');");
+    await db.query("insert into Citas (idUsu,idAnuncio,idServicio,fecha) values("+receivedPOST.idUsu+","+idAnuncio[0]["id"]+","+idServicio[0]["id"]+",'"+spanishDateString+"');");
 
     result = {status: "OK", message: "Hora reservada correctamente"}
   }
