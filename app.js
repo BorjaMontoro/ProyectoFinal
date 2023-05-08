@@ -908,10 +908,10 @@ async function getClientDates(req,res){
   if(receivedPOST){
     let citas
     if (receivedPOST.status=="Pending"){
-      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha > NOW() order by fecha ASC")
+      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha > DATE_ADD(NOW(), INTERVAL 2 HOUR) order by fecha ASC")
 
     }else if (receivedPOST.status=="Complete"){
-      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha <= NOW() order by fecha ASC")
+      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha <= DATE_ADD(NOW(), INTERVAL 2 HOUR) order by fecha ASC")
 
     }
     let nuevaListaCitas = [];
