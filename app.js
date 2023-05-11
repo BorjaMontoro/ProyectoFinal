@@ -949,6 +949,7 @@ async function getClientDates(req,res){
       ];
 
       let nuevaCita = {
+        id: citas[i].id,
         nombreServicio: nombreServicio,
         nombreEmpresa: nombreEmpresa,
         mes: meses[fecha.getMonth()], 
@@ -1007,6 +1008,33 @@ async function getCompanyDates(req,res){
 
     result = {status: "OK", message: "Las citas", citas: citas}
     
+    
+  }
+
+  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.end(JSON.stringify(result))
+
+}
+
+app.post('/delete_date',deleteDate)
+async function deleteDate(req,res){
+  let receivedPOST = await post.getPostObject(req)
+  let result = { status: "ERROR", message: "Unkown type" }
+
+  if(receivedPOST){
+
+    let contador = await db.query("select count(*) as cont from Citas where id="+receivedPOST.id);
+    if(contador[0]["cont"]>0){
+      try{
+        await db.query("delete from Citas where id="+receivedPOST.id);
+        result = {status: "OK", message: "Cita eliminada correctamente"}
+
+      }catch{
+        result = {status: "ERROR", message: "La cita que quieres eliminar no existe"}
+      }
+    }else{
+      result = {status: "ERROR", message: "La cita que quieres eliminar no existe"}
+    }    
     
   }
 
