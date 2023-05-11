@@ -804,6 +804,7 @@ async function getDates (req, res) {
 
       }
       let now = new Date();
+      now.setHours(now.getHours()+2)
       let horasValidas = [];
 
       for (let i = 0; i < horas.length; i++) {
@@ -845,7 +846,7 @@ async function saveDate (req, res) {
     let idAnuncio = await db.query("select id from Anuncios where idUsu=(select id from Usuarios where nombreEmpresa='"+receivedPOST.name+"');");
 
     let idServicio = await db.query("select id from Servicios where idAnuncio="+idAnuncio[0]["id"]+" and nombre='"+receivedPOST.nameService+"';");
-    await db.query("insert into Citas (idAnuncio,idServicio,fecha) values("+idAnuncio[0]["id"]+","+idServicio[0]["id"]+",'"+spanishDateString+"');");
+    await db.query("insert into Citas (idUsu,idAnuncio,idServicio,fecha) values("+receivedPOST.idUsu+","+idAnuncio[0]["id"]+","+idServicio[0]["id"]+",'"+spanishDateString+"');");
 
     result = {status: "OK", message: "Hora reservada correctamente"}
   }
@@ -907,10 +908,10 @@ async function getClientDates(req,res){
   if(receivedPOST){
     let citas
     if (receivedPOST.status=="Pending"){
-      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha > NOW();")
+      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha > DATE_ADD(NOW(), INTERVAL 2 HOUR) order by fecha ASC")
 
     }else if (receivedPOST.status=="Complete"){
-      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha <= NOW();")
+      citas = await db.query("select * from Citas where idUsu="+receivedPOST.id+" and fecha <= DATE_ADD(NOW(), INTERVAL 2 HOUR) order by fecha ASC")
 
     }
     let nuevaListaCitas = [];
