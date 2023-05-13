@@ -234,11 +234,6 @@ function cumplimientoFranjas(inicioDia,finalDia,inicioTarde,finalTarde){
     }
   }
 
-  for (let i = 0; i < timeObjs.length - 1; i++) {
-    if (timeObjs[i].getTime() + (60 * 60 * 1000) >= timeObjs[i+1].getTime()) {
-      return false;
-    }
-  }
   return true
 }
 
