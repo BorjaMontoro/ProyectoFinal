@@ -263,7 +263,7 @@ async function createAdvertisment (req, res) {
       if (receivedPOST.direccion.trim()==""){
         result = {status: "ERROR", message: "Es necesaria una dirección"}
       }else{
-        let regex = /^[ a-zA-ZñÑáéíóúÁÉÍÓÚ,-]+$/;
+        let regex = /^[ a-zA-ZñÑàèòáéíóúÁÉÍÓÚ,-]+$/;
         if (regex.test(receivedPOST.direccion)){
           const horas=[receivedPOST.diaInicioLunes,receivedPOST.diaFinalLunes,receivedPOST.tardeInicioLunes,receivedPOST.tardeFinalLunes,receivedPOST.diaInicioMartes,receivedPOST.diaFinalMartes,
           receivedPOST.tardeInicioMartes,receivedPOST.tardeFinalMartes,receivedPOST.diaInicioMiercoles,receivedPOST.diaFinalMiercoles,receivedPOST.tardeInicioMiercoles,
