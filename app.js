@@ -263,85 +263,90 @@ async function createAdvertisment (req, res) {
       if (receivedPOST.direccion.trim()==""){
         result = {status: "ERROR", message: "Es necesaria una dirección"}
       }else{
-        const horas=[receivedPOST.diaInicioLunes,receivedPOST.diaFinalLunes,receivedPOST.tardeInicioLunes,receivedPOST.tardeFinalLunes,receivedPOST.diaInicioMartes,receivedPOST.diaFinalMartes,
+        let regex = /^[ a-zA-ZñÑáéíóúÁÉÍÓÚ,-]+$/;
+        if (regex.test(receivedPOST.direccion)){
+          const horas=[receivedPOST.diaInicioLunes,receivedPOST.diaFinalLunes,receivedPOST.tardeInicioLunes,receivedPOST.tardeFinalLunes,receivedPOST.diaInicioMartes,receivedPOST.diaFinalMartes,
           receivedPOST.tardeInicioMartes,receivedPOST.tardeFinalMartes,receivedPOST.diaInicioMiercoles,receivedPOST.diaFinalMiercoles,receivedPOST.tardeInicioMiercoles,
           receivedPOST.tardeFinalMiercoles,receivedPOST.diaInicioJueves,receivedPOST.diaFinalJueves,receivedPOST.tardeInicioJueves,receivedPOST.tardeFinalJueves,receivedPOST.diaInicioViernes,
           receivedPOST.diaFinalViernes,receivedPOST.tardeInicioViernes,receivedPOST.tardeFinalViernes,receivedPOST.diaInicioSabado,receivedPOST.diaFinalSabado,receivedPOST.tardeInicioSabado,
           receivedPOST.tardeFinalSabado,receivedPOST.diaInicioDomingo,receivedPOST.diaFinalDomingo,receivedPOST.tardeInicioDomingo,receivedPOST.tardeFinalDomingo]
-        if (comprobarHora(horas)){
-          let diaInicioLunes=comprobarYRemplazar(receivedPOST.diaInicioLunes)
-          let diaFinalLunes=comprobarYRemplazar(receivedPOST.diaFinalLunes)
-          let tardeInicioLunes=comprobarYRemplazar(receivedPOST.tardeInicioLunes)
-          let tardeFinalLunes=comprobarYRemplazar(receivedPOST.tardeFinalLunes)
-          let diaInicioMartes=comprobarYRemplazar(receivedPOST.diaInicioMartes)
-          let diaFinalMartes=comprobarYRemplazar(receivedPOST.diaFinalMartes)
-          let tardeInicioMartes=comprobarYRemplazar(receivedPOST.tardeInicioMartes)
-          let tardeFinalMartes=comprobarYRemplazar(receivedPOST.tardeFinalMartes)
-          let diaInicioMiercoles=comprobarYRemplazar(receivedPOST.diaInicioMiercoles)
-          let diaFinalMiercoles=comprobarYRemplazar(receivedPOST.diaFinalMiercoles)
-          let tardeInicioMiercoles=comprobarYRemplazar(receivedPOST.tardeInicioMiercoles)
-          let tardeFinalMiercoles=comprobarYRemplazar(receivedPOST.tardeFinalMiercoles)
-          let diaInicioJueves=comprobarYRemplazar(receivedPOST.diaInicioJueves)
-          let diaFinalJueves=comprobarYRemplazar(receivedPOST.diaFinalJueves)
-          let tardeInicioJueves=comprobarYRemplazar(receivedPOST.tardeInicioJueves)
-          let tardeFinalJueves=comprobarYRemplazar(receivedPOST.tardeFinalJueves)
-          let diaInicioViernes=comprobarYRemplazar(receivedPOST.diaInicioViernes)
-          let diaFinalViernes=comprobarYRemplazar(receivedPOST.diaFinalViernes)
-          let tardeInicioViernes=comprobarYRemplazar(receivedPOST.tardeInicioViernes)
-          let tardeFinalViernes=comprobarYRemplazar(receivedPOST.tardeFinalViernes)
-          let diaInicioSabado=comprobarYRemplazar(receivedPOST.diaInicioSabado)
-          let diaFinalSabado=comprobarYRemplazar(receivedPOST.diaFinalSabado)
-          let tardeInicioSabado=comprobarYRemplazar(receivedPOST.tardeInicioSabado)
-          let tardeFinalSabado=comprobarYRemplazar(receivedPOST.tardeFinalSabado)
-          let diaInicioDomingo=comprobarYRemplazar(receivedPOST.diaInicioDomingo)
-          let diaFinalDomingo=comprobarYRemplazar(receivedPOST.diaFinalDomingo)
-          let tardeInicioDomingo=comprobarYRemplazar(receivedPOST.tardeInicioDomingo)
-          let tardeFinalDomingo=comprobarYRemplazar(receivedPOST.tardeFinalDomingo)
+          if (comprobarHora(horas)){
+            let diaInicioLunes=comprobarYRemplazar(receivedPOST.diaInicioLunes)
+            let diaFinalLunes=comprobarYRemplazar(receivedPOST.diaFinalLunes)
+            let tardeInicioLunes=comprobarYRemplazar(receivedPOST.tardeInicioLunes)
+            let tardeFinalLunes=comprobarYRemplazar(receivedPOST.tardeFinalLunes)
+            let diaInicioMartes=comprobarYRemplazar(receivedPOST.diaInicioMartes)
+            let diaFinalMartes=comprobarYRemplazar(receivedPOST.diaFinalMartes)
+            let tardeInicioMartes=comprobarYRemplazar(receivedPOST.tardeInicioMartes)
+            let tardeFinalMartes=comprobarYRemplazar(receivedPOST.tardeFinalMartes)
+            let diaInicioMiercoles=comprobarYRemplazar(receivedPOST.diaInicioMiercoles)
+            let diaFinalMiercoles=comprobarYRemplazar(receivedPOST.diaFinalMiercoles)
+            let tardeInicioMiercoles=comprobarYRemplazar(receivedPOST.tardeInicioMiercoles)
+            let tardeFinalMiercoles=comprobarYRemplazar(receivedPOST.tardeFinalMiercoles)
+            let diaInicioJueves=comprobarYRemplazar(receivedPOST.diaInicioJueves)
+            let diaFinalJueves=comprobarYRemplazar(receivedPOST.diaFinalJueves)
+            let tardeInicioJueves=comprobarYRemplazar(receivedPOST.tardeInicioJueves)
+            let tardeFinalJueves=comprobarYRemplazar(receivedPOST.tardeFinalJueves)
+            let diaInicioViernes=comprobarYRemplazar(receivedPOST.diaInicioViernes)
+            let diaFinalViernes=comprobarYRemplazar(receivedPOST.diaFinalViernes)
+            let tardeInicioViernes=comprobarYRemplazar(receivedPOST.tardeInicioViernes)
+            let tardeFinalViernes=comprobarYRemplazar(receivedPOST.tardeFinalViernes)
+            let diaInicioSabado=comprobarYRemplazar(receivedPOST.diaInicioSabado)
+            let diaFinalSabado=comprobarYRemplazar(receivedPOST.diaFinalSabado)
+            let tardeInicioSabado=comprobarYRemplazar(receivedPOST.tardeInicioSabado)
+            let tardeFinalSabado=comprobarYRemplazar(receivedPOST.tardeFinalSabado)
+            let diaInicioDomingo=comprobarYRemplazar(receivedPOST.diaInicioDomingo)
+            let diaFinalDomingo=comprobarYRemplazar(receivedPOST.diaFinalDomingo)
+            let tardeInicioDomingo=comprobarYRemplazar(receivedPOST.tardeInicioDomingo)
+            let tardeFinalDomingo=comprobarYRemplazar(receivedPOST.tardeFinalDomingo)
 
-          if(cumplimientoFranjas(diaInicioLunes,diaFinalLunes,tardeInicioLunes,tardeFinalLunes) && cumplimientoFranjas(diaInicioMartes,diaFinalMartes,tardeInicioMartes,tardeFinalMartes) && 
-          cumplimientoFranjas(diaInicioMiercoles,diaFinalMiercoles,tardeInicioMiercoles,tardeFinalMiercoles) && cumplimientoFranjas(diaInicioJueves,diaFinalJueves,tardeInicioJueves,tardeFinalJueves) && 
-          cumplimientoFranjas(diaInicioViernes,diaFinalViernes,tardeInicioViernes,tardeFinalViernes) && cumplimientoFranjas(diaInicioSabado,diaFinalSabado,tardeInicioSabado,tardeFinalSabado) && 
-          cumplimientoFranjas(diaInicioDomingo,diaFinalDomingo,tardeInicioDomingo,tardeFinalDomingo)){
-            const fileBuffer = Buffer.from(receivedPOST.imagen, 'base64');
-            const path = "./private"
-            const anuncios = await db.query("select imagen from Anuncios")
-            let nameFile=`${createNameFile()}.jpg`;
-            let flag=false;
-            while(!flag){
-              flag=true
-              for (let i=0; i<anuncios.length;i++){
-                if (nameFile==anuncios[i]["imagen"]){
-                  nameFile=`${createNameFile()}.jpg`;
-                  flag=false;
-                  break;
-                } 
+            if(cumplimientoFranjas(diaInicioLunes,diaFinalLunes,tardeInicioLunes,tardeFinalLunes) && cumplimientoFranjas(diaInicioMartes,diaFinalMartes,tardeInicioMartes,tardeFinalMartes) && 
+            cumplimientoFranjas(diaInicioMiercoles,diaFinalMiercoles,tardeInicioMiercoles,tardeFinalMiercoles) && cumplimientoFranjas(diaInicioJueves,diaFinalJueves,tardeInicioJueves,tardeFinalJueves) && 
+            cumplimientoFranjas(diaInicioViernes,diaFinalViernes,tardeInicioViernes,tardeFinalViernes) && cumplimientoFranjas(diaInicioSabado,diaFinalSabado,tardeInicioSabado,tardeFinalSabado) && 
+            cumplimientoFranjas(diaInicioDomingo,diaFinalDomingo,tardeInicioDomingo,tardeFinalDomingo)){
+              const fileBuffer = Buffer.from(receivedPOST.imagen, 'base64');
+              const path = "./private"
+              const anuncios = await db.query("select imagen from Anuncios")
+              let nameFile=`${createNameFile()}.jpg`;
+              let flag=false;
+              while(!flag){
+                flag=true
+                for (let i=0; i<anuncios.length;i++){
+                  if (nameFile==anuncios[i]["imagen"]){
+                    nameFile=`${createNameFile()}.jpg`;
+                    flag=false;
+                    break;
+                  } 
+                }
               }
-            }
-            await fs.mkdir(path, { recursive: true }) // Crea el directori si no existeix
-            await fs.writeFile(`${path}/${nameFile}`, fileBuffer)
+              await fs.mkdir(path, { recursive: true }) // Crea el directori si no existeix
+              await fs.writeFile(`${path}/${nameFile}`, fileBuffer)
 
-            await db.query("insert into Anuncios(idUsu, tipo, direccion, imagen) values("+ receivedPOST.id+", '"+receivedPOST.tipo+"', '"+receivedPOST.direccion+"', '"+nameFile+"');");
-            const idAnuncio = await db.query("select id from Anuncios where idUsu="+receivedPOST.id);
-            insertarDatos("HorarioLunes",idAnuncio[0]["id"],diaInicioLunes,diaFinalLunes)
-            insertarDatos("HorarioLunes",idAnuncio[0]["id"],tardeInicioLunes,tardeFinalLunes)
-            insertarDatos("HorarioMartes",idAnuncio[0]["id"],diaInicioMartes,diaFinalMartes)
-            insertarDatos("HorarioMartes",idAnuncio[0]["id"],tardeInicioMartes,tardeFinalMartes)
-            insertarDatos("HorarioMiercoles",idAnuncio[0]["id"],diaInicioMiercoles,diaFinalMiercoles)
-            insertarDatos("HorarioMiercoles",idAnuncio[0]["id"],tardeInicioMiercoles,tardeFinalMiercoles)
-            insertarDatos("HorarioJueves",idAnuncio[0]["id"],diaInicioJueves,diaFinalJueves)
-            insertarDatos("HorarioJueves",idAnuncio[0]["id"],tardeInicioJueves,tardeFinalJueves)
-            insertarDatos("HorarioViernes",idAnuncio[0]["id"],diaInicioViernes,diaFinalViernes)
-            insertarDatos("HorarioViernes",idAnuncio[0]["id"],tardeInicioViernes,tardeFinalViernes)
-            insertarDatos("HorarioSabado",idAnuncio[0]["id"],diaInicioSabado,diaFinalSabado)
-            insertarDatos("HorarioSabado",idAnuncio[0]["id"],tardeInicioSabado,tardeFinalSabado)
-            insertarDatos("HorarioDomingo",idAnuncio[0]["id"],diaInicioDomingo,diaFinalDomingo)
-            insertarDatos("HorarioDomingo",idAnuncio[0]["id"],tardeInicioDomingo,tardeFinalDomingo)
-            result = {status: "OK", message: "El anuncio ha sido creado correctamente"}
+              await db.query("insert into Anuncios(idUsu, tipo, direccion, imagen) values("+ receivedPOST.id+", '"+receivedPOST.tipo+"', '"+receivedPOST.direccion+"', '"+nameFile+"');");
+              const idAnuncio = await db.query("select id from Anuncios where idUsu="+receivedPOST.id);
+              insertarDatos("HorarioLunes",idAnuncio[0]["id"],diaInicioLunes,diaFinalLunes)
+              insertarDatos("HorarioLunes",idAnuncio[0]["id"],tardeInicioLunes,tardeFinalLunes)
+              insertarDatos("HorarioMartes",idAnuncio[0]["id"],diaInicioMartes,diaFinalMartes)
+              insertarDatos("HorarioMartes",idAnuncio[0]["id"],tardeInicioMartes,tardeFinalMartes)
+              insertarDatos("HorarioMiercoles",idAnuncio[0]["id"],diaInicioMiercoles,diaFinalMiercoles)
+              insertarDatos("HorarioMiercoles",idAnuncio[0]["id"],tardeInicioMiercoles,tardeFinalMiercoles)
+              insertarDatos("HorarioJueves",idAnuncio[0]["id"],diaInicioJueves,diaFinalJueves)
+              insertarDatos("HorarioJueves",idAnuncio[0]["id"],tardeInicioJueves,tardeFinalJueves)
+              insertarDatos("HorarioViernes",idAnuncio[0]["id"],diaInicioViernes,diaFinalViernes)
+              insertarDatos("HorarioViernes",idAnuncio[0]["id"],tardeInicioViernes,tardeFinalViernes)
+              insertarDatos("HorarioSabado",idAnuncio[0]["id"],diaInicioSabado,diaFinalSabado)
+              insertarDatos("HorarioSabado",idAnuncio[0]["id"],tardeInicioSabado,tardeFinalSabado)
+              insertarDatos("HorarioDomingo",idAnuncio[0]["id"],diaInicioDomingo,diaFinalDomingo)
+              insertarDatos("HorarioDomingo",idAnuncio[0]["id"],tardeInicioDomingo,tardeFinalDomingo)
+              result = {status: "OK", message: "El anuncio ha sido creado correctamente"}
+            }else{
+              result = {status: "ERROR", message: "Las franjas del horario no son correctas "}
+            }
           }else{
-            result = {status: "ERROR", message: "Las franjas del horario no son correctas "}
+            result = {status: "ERROR", message: "Alguna hora no es valida"}
           }
         }else{
-          result = {status: "ERROR", message: "Alguna hora no es valida"}
+          result = {status: "ERROR", message: "La direccion no puede contener comillas entre otros caracteres especiales"}
         }
       }
     }else{
